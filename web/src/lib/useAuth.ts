@@ -69,7 +69,6 @@ export function useAuth() {
             ClientId: config.cognitoClientId,
             Username: email,
             UserAttributes: [{ Name: "email", Value: email }],
-            MessageAction: "SUPPRESS", // Don't send auto confirmation email yet
           })
         );
       } catch (error: any) {
