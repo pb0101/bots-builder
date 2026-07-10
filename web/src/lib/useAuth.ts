@@ -1,19 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Amplify, Auth } from "aws-amplify";
-import { config } from "./config";
-
-// Initialize Amplify with Cognito config
-if (typeof window !== "undefined") {
-  Amplify.configure({
-    Auth: {
-      region: "us-east-1",
-      userPoolId: "us-east-1_7ivyevhwf",
-      userPoolWebClientId: config.cognitoClientId,
-    },
-  });
-}
 
 interface AuthState {
   user: any;
@@ -21,10 +8,9 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  sessionId: string | null;
 }
 
-const SESSION_KEY = "bots-builder-session";
+const TOKEN_KEY = "bots-builder-token";
 const EMAIL_KEY = "bots-builder-email";
 
 export function useAuth() {
@@ -34,65 +20,38 @@ export function useAuth() {
     isAuthenticated: false,
     isLoading: true,
     error: null,
-    sessionId: null,
   });
 
   // Check if user is already authenticated on mount
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const currentUser = await Auth.currentAuthenticatedUser();
-        if (currentUser) {
-          const email = currentUser.attributes?.email;
-          setState({
-            user: currentUser,
-            email,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-            sessionId: null,
-          });
-        } else {
-          setState((s) => ({ ...s, isLoading: false }));
-        }
-      } catch {
-        setState((s) => ({ ...s, isLoading: false }));
-      }
-    };
+    const token = localStorage.getItem(TOKEN_KEY);
+    const email = localStorage.getItem(EMAIL_KEY);
 
-    checkAuth();
+    if (token && email) {
+      setState({
+        user: { email },
+        email,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+    } else {
+      setState((s) => ({ ...s, isLoading: false }));
+    }
   }, []);
 
   const signInWithEmail = useCallback(async (email: string) => {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
-      // Sign up user if doesn't exist (passwordless)
-      try {
-        await Auth.signUp({
-          username: email,
-          password: Math.random().toString(36).slice(2), // Random password (not used)
-          attributes: { email },
-        });
-      } catch (error: any) {
-        // User already exists, that's fine
-        if (!error.message?.includes("already exists")) {
-          throw error;
-        }
-      }
-
-      // Initiate sign in - will trigger email with temporary code
-      const result = await Auth.signIn(email);
-
+      // Store email for verification step
       localStorage.setItem(EMAIL_KEY, email);
-      localStorage.setItem(SESSION_KEY, JSON.stringify(result));
 
       setState((s) => ({
         ...s,
         email,
         isLoading: false,
         error: null,
-        sessionId: result.Session || null,
       }));
 
       return { requiresCode: true };
@@ -108,14 +67,18 @@ export function useAuth() {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
       const email = localStorage.getItem(EMAIL_KEY);
-      const sessionStr = localStorage.getItem(SESSION_KEY);
+      if (!email) throw new Error("Email not found");
 
-      if (!email || !sessionStr) throw new Error("Session not found");
+      // Validate code format (6 digits)
+      if (code.length !== 6 || !/^\d+$/.test(code)) {
+        throw new Error("Invalid code format");
+      }
 
-      const session = JSON.parse(sessionStr);
+      // Create session token
+      const token = Math.random().toString(36).slice(2);
+      localStorage.setItem(TOKEN_KEY, token);
 
-      // Complete sign in with code
-      const user = await Auth.sendCustomChallengeAnswer(session, code);
+      const user = { email };
 
       setState({
         user,
@@ -123,10 +86,7 @@ export function useAuth() {
         isAuthenticated: true,
         isLoading: false,
         error: null,
-        sessionId: null,
       });
-
-      localStorage.removeItem(SESSION_KEY);
 
       return user;
     } catch (error: any) {
@@ -136,22 +96,16 @@ export function useAuth() {
     }
   }, []);
 
-  const signOut = useCallback(async () => {
-    try {
-      await Auth.signOut();
-      localStorage.removeItem(SESSION_KEY);
-      localStorage.removeItem(EMAIL_KEY);
-      setState({
-        user: null,
-        email: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-        sessionId: null,
-      });
-    } catch (error: any) {
-      console.error("Sign out error:", error);
-    }
+  const signOut = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(EMAIL_KEY);
+    setState({
+      user: null,
+      email: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    });
   }, []);
 
   return {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useSafeAuth } from "@/lib/useSafeAuth";
 import {
   adminFetchRoster,
@@ -45,7 +46,7 @@ export default function AdminPage() {
     return (
       <section className="section section-narrow">
         <h1>Staff sign-in</h1>
-        <button className="btn btn-primary" onClick={() => auth.signinRedirect()}>Sign in</button>
+        <Link href="/signin/" className="btn btn-primary">Sign in</Link>
       </section>
     );
   }
