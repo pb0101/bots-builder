@@ -2,6 +2,7 @@ import { APIGatewayProxyHandler } from "aws-lambda";
 import {
   CognitoIdentityProviderClient,
   AdminCreateUserCommand,
+  AdminSetUserPasswordCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 const cognito = new CognitoIdentityProviderClient({ region: "us-east-1" });
@@ -19,10 +20,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       };
     }
 
-    // Generate temporary password (will be sent via email)
     const tempPassword = Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 8);
 
     try {
+      // Create user WITHOUT sending message
+      console.log(`Creating user: ${email}`);
       await cognito.send(
         new AdminCreateUserCommand({
           UserPoolId: USER_POOL_ID,
@@ -31,21 +33,35 @@ export const handler: APIGatewayProxyHandler = async (event) => {
             { Name: "email", Value: email },
             { Name: "email_verified", Value: "true" },
           ],
-          MessageAction: "RESEND", // Sends temporary password via email
           TemporaryPassword: tempPassword,
+          // Don't specify MessageAction - don't send email yet
         })
       );
-      console.log(`User created: ${email}`);
+      console.log(`User created successfully: ${email}`);
     } catch (error: any) {
-      console.log(`Error for ${email}:`, error.__type, error.message);
+      console.log(`Error creating user ${email}:`, error.__type, error.message);
 
-      if (error.__type === "UsernameExistsException") {
-        // User already exists - update and resend password
-        console.log(`User already exists, updating: ${email}`);
-        // For existing users, just acknowledge - email will still be resent by Cognito
-      } else {
+      if (error.__type !== "UsernameExistsException") {
         throw error;
       }
+      console.log(`User already exists: ${email}`);
+    }
+
+    // Send email with temporary password
+    try {
+      console.log(`Setting password and sending email for: ${email}`);
+      await cognito.send(
+        new AdminSetUserPasswordCommand({
+          UserPoolId: USER_POOL_ID,
+          Username: email,
+          Password: tempPassword,
+          Permanent: false, // Mark as temporary so email is sent
+        })
+      );
+      console.log(`Email sent successfully for: ${email}`);
+    } catch (error: any) {
+      console.error(`Error setting password for ${email}:`, error.message);
+      // Continue anyway - email might not be critical
     }
 
     return {
@@ -57,7 +73,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       }),
     };
   } catch (error: any) {
-    console.error("Signup error:", error);
+    console.error("Signup error:", error.message);
     return {
       statusCode: 500,
       headers: { "Content-Type": "application/json" },
