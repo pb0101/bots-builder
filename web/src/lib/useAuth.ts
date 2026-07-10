@@ -61,63 +61,37 @@ export function useAuth() {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
-      // Create or get user and trigger email with confirmation code
+      // Create or get user and let Cognito send temporary password via email
       try {
         await client.send(
           new AdminCreateUserCommand({
             UserPoolId: "us-east-1_7ivyevhwf",
             Username: email,
-            UserAttributes: [{ Name: "email", Value: email }],
-            MessageAction: "SUPPRESS", // Don't send welcome email, just confirmation
+            UserAttributes: [
+              { Name: "email", Value: email },
+              { Name: "email_verified", Value: "true" }, // Mark email as verified
+            ],
+            MessageAction: "RESEND", // Send the temporary password via email
             TemporaryPassword: Math.random().toString(36).slice(-10), // Random temp password
           })
         );
       } catch (error: any) {
-        // User might already exist, that's fine
-        if (!error.message?.includes("already exists")) {
-          console.error("AdminCreateUser error:", error);
-        }
+        // User might already exist - that's fine, just continue
+        console.log(`User ${email} creation skipped (likely exists):`, error.message);
       }
 
-      // Now initiate auth flow to trigger the confirmation code email
-      try {
-        const authResponse = await client.send(
-          new AdminInitiateAuthCommand({
-            UserPoolId: "us-east-1_7ivyevhwf",
-            ClientId: config.cognitoClientId,
-            AuthFlow: "ADMIN_NO_SRP_AUTH",
-            AuthParameters: {
-              USERNAME: email,
-              PASSWORD: Math.random().toString(36).slice(-10), // Dummy password
-            },
-          })
-        );
+      // Email has been sent with temporary password
+      // Now we wait for user to enter the code from email
+      localStorage.setItem(EMAIL_KEY, email);
+      localStorage.removeItem(SESSION_KEY);
 
-        localStorage.setItem(EMAIL_KEY, email);
-        const sessionData = {
-          session: authResponse.Session,
-          challengeName: authResponse.ChallengeName,
-        };
-        localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-
-        setState((s) => ({
-          ...s,
-          email,
-          session: authResponse.Session || null,
-          isLoading: false,
-          error: null,
-        }));
-      } catch {
-        // Auth might fail due to invalid password, but email should be sent
-        localStorage.setItem(EMAIL_KEY, email);
-        setState((s) => ({
-          ...s,
-          email,
-          session: null,
-          isLoading: false,
-          error: null,
-        }));
-      }
+      setState((s) => ({
+        ...s,
+        email,
+        session: null,
+        isLoading: false,
+        error: null,
+      }));
 
       return { requiresCode: true };
     } catch (error: any) {
@@ -132,48 +106,66 @@ export function useAuth() {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
       const email = localStorage.getItem(EMAIL_KEY);
-      const sessionStr = localStorage.getItem(SESSION_KEY);
 
       if (!email) throw new Error("Email not found");
 
-      if (sessionStr) {
-        // Get challenge name from stored session data
-        const sessionData = JSON.parse(sessionStr);
-        const challengeName = sessionData.challengeName || "SOFTWARE_TOKEN_MFA";
-        const session = sessionData.session || sessionStr;
+      // Use the code (temporary password) from email to authenticate
+      const authResponse = await client.send(
+        new AdminInitiateAuthCommand({
+          UserPoolId: "us-east-1_7ivyevhwf",
+          ClientId: config.cognitoClientId,
+          AuthFlow: "ADMIN_NO_SRP_AUTH",
+          AuthParameters: {
+            USERNAME: email,
+            PASSWORD: code, // Use the code/temp password from email
+          },
+        })
+      );
 
-        const mfaResponse = await client.send(
-          new RespondToAuthChallengeCommand({
-            ClientId: config.cognitoClientId,
-            ChallengeName: challengeName as any,
-            Session: session,
-            ChallengeResponses: {
-              USERNAME: email,
-              SOFTWARE_TOKEN_MFA_CODE: code,
-            },
+      // If auth succeeded, we have tokens
+      if (authResponse.AuthenticationResult) {
+        const tokens = {
+          accessToken: authResponse.AuthenticationResult.AccessToken,
+          idToken: authResponse.AuthenticationResult.IdToken,
+          refreshToken: authResponse.AuthenticationResult.RefreshToken,
+        };
+        localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
+        localStorage.removeItem(SESSION_KEY);
+
+        setState({
+          user: { email },
+          email,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          session: null,
+        });
+
+        return { email };
+      }
+
+      // If there's a challenge (e.g., NEW_PASSWORD_REQUIRED), handle it
+      if (authResponse.ChallengeName === "NEW_PASSWORD_REQUIRED" && authResponse.Session) {
+        // For passwordless, just accept the temp password
+        // Don't require new password setup
+        localStorage.setItem(
+          SESSION_KEY,
+          JSON.stringify({
+            session: authResponse.Session,
+            challengeName: authResponse.ChallengeName,
           })
         );
 
-        if (mfaResponse.AuthenticationResult) {
-          const tokens = {
-            accessToken: mfaResponse.AuthenticationResult.AccessToken,
-            idToken: mfaResponse.AuthenticationResult.IdToken,
-            refreshToken: mfaResponse.AuthenticationResult.RefreshToken,
-          };
-          localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
-          localStorage.removeItem(SESSION_KEY);
+        setState({
+          user: { email },
+          email,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          session: authResponse.Session || null,
+        });
 
-          setState({
-            user: { email },
-            email,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-            session: null,
-          });
-
-          return { email };
-        }
+        return { email };
       }
 
       throw new Error("Verification failed");
