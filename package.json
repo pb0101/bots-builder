@@ -1,0 +1,9 @@
+{
+  "name": "bots-builder",
+  "private": true,
+  "workspaces": ["web", "infra", "functions"],
+  "scripts": {
+    "build:web": "npm run build -w web",
+    "deploy": "npm run build -w web && npm -w infra run cdk -- deploy --all --require-approval never"
+  }
+}

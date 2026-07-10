@@ -1,0 +1,78 @@
+import type { Metadata } from "next";
+import "./globals.css";
+import { Providers } from "@/components/Providers";
+import { Nav } from "@/components/Nav";
+
+export const metadata: Metadata = {
+  title: "Bots Builder — Robotics classes for kids in Frisco, TX",
+  description:
+    "Real engineering for ages 7–12. Kids build and program robots, earn skill badges, and progress toward the VEX World Championship held in Dallas. Taught by a professional engineer.",
+  openGraph: {
+    title: "Bots Builder — Kids robotics classes in Frisco, TX",
+    description:
+      "Kids build and program autonomous robots on a four-level engineering ladder. Small classes, skill badges, parent Demo Days.",
+    type: "website",
+    locale: "en_US",
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: "Bots Builder",
+  description: "Robotics and coding classes for kids ages 7–12 in Frisco, Texas.",
+  email: "hello@botsbuilder.com",
+  address: { "@type": "PostalAddress", addressLocality: "Frisco", addressRegion: "TX", addressCountry: "US" },
+  priceRange: "$25–$599",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <Providers>
+          <Nav />
+          <main>{children}</main>
+          <footer className="footer">
+            <div className="footer-grid">
+              <div>
+                <p className="footer-brand">Bots Builder LLC</p>
+                <p>Robotics classes for ages 7–12 · Frisco, Texas</p>
+              </div>
+              <div>
+                <p className="footer-head">Contact</p>
+                <p><a href="mailto:hello@botsbuilder.com">hello@botsbuilder.com</a></p>
+                <p><a href="/contact/">Contact form</a></p>
+              </div>
+              <div>
+                <p className="footer-head">Programs</p>
+                <p><a href="/programs/">The four-level ladder</a></p>
+                <p><a href="/schedule/">Schedule &amp; enrollment</a></p>
+                <p><a href="/pricing/">Pricing</a></p>
+                <p><a href="/faq/">FAQ</a></p>
+                <p><a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a> · <a href="/refunds/">Refunds</a></p>
+              </div>
+            </div>
+            <p className="footer-fine">
+              © {new Date().getFullYear()} Bots Builder LLC. VEX and VEX IQ are trademarks of
+              Innovation First, Inc. Bots Builder is an independent program, not affiliated with
+              or endorsed by Innovation First.
+            </p>
+          </footer>
+        </Providers>
+      </body>
+    </html>
+  );
+}
