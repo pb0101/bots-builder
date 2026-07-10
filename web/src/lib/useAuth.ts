@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   CognitoIdentityProviderClient,
-  AdminInitiateAuthCommand,
-  RespondToAuthChallengeCommand,
+  SignUpCommand,
+  ConfirmSignUpCommand,
+  InitiateAuthCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { config } from "./config";
 
@@ -14,13 +15,11 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  session: string | null;
 }
 
-const TOKEN_KEY = "bots-builder-token";
 const TOKENS_KEY = "bots-builder-tokens";
 const EMAIL_KEY = "bots-builder-email";
-const SESSION_KEY = "bots-builder-session";
+const USERNAME_KEY = "bots-builder-username";
 
 const client = new CognitoIdentityProviderClient({ region: "us-east-1" });
 
@@ -31,7 +30,6 @@ export function useAuth() {
     isAuthenticated: false,
     isLoading: true,
     error: null,
-    session: null,
   });
 
   // Check if user is already authenticated on mount
@@ -47,72 +45,91 @@ export function useAuth() {
         isAuthenticated: true,
         isLoading: false,
         error: null,
-        session: null,
       });
     } else {
       setState((s) => ({ ...s, isLoading: false }));
     }
   }, []);
 
-  const signInWithEmail = useCallback(async (email: string) => {
+  const signUp = useCallback(async (username: string, password: string, email: string) => {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
-      // Call Lambda to create user and send email with temporary password
-      const response = await fetch(`${config.apiUrl}/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
+      await client.send(
+        new SignUpCommand({
+          ClientId: config.cognitoClientId,
+          Username: username,
+          Password: password,
+          UserAttributes: [{ Name: "email", Value: email }],
+        })
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to sign up");
-      }
-
-      // Email has been sent with temporary password
-      // Now we wait for user to enter the code from email
       localStorage.setItem(EMAIL_KEY, email);
-      localStorage.removeItem(SESSION_KEY);
+      localStorage.setItem(USERNAME_KEY, username);
 
       setState((s) => ({
         ...s,
         email,
-        session: null,
         isLoading: false,
         error: null,
       }));
 
-      return { requiresCode: true };
+      return { requiresVerification: true };
     } catch (error: any) {
-      const errorMsg = error.message || "Could not sign up";
+      const errorMsg = error.message || "Sign up failed";
       setState((s) => ({ ...s, isLoading: false, error: errorMsg }));
       throw error;
     }
   }, []);
 
-  const verifyCode = useCallback(async (code: string) => {
+  const confirmSignUp = useCallback(async (code: string) => {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
+      const username = localStorage.getItem(USERNAME_KEY);
       const email = localStorage.getItem(EMAIL_KEY);
 
-      if (!email) throw new Error("Email not found");
+      if (!username || !email) throw new Error("Username or email not found");
 
-      // Use the code (temporary password) from email to authenticate
-      const authResponse = await client.send(
-        new AdminInitiateAuthCommand({
-          UserPoolId: "us-east-1_7ivyevhwf",
+      await client.send(
+        new ConfirmSignUpCommand({
           ClientId: config.cognitoClientId,
-          AuthFlow: "ADMIN_NO_SRP_AUTH",
+          Username: username,
+          ConfirmationCode: code,
+        })
+      );
+
+      setState({
+        user: { email },
+        email,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+
+      return { email };
+    } catch (error: any) {
+      const errorMsg = error.message || "Verification failed";
+      setState((s) => ({ ...s, isLoading: false, error: errorMsg }));
+      throw error;
+    }
+  }, []);
+
+  const signIn = useCallback(async (username: string, password: string) => {
+    try {
+      setState((s) => ({ ...s, isLoading: true, error: null }));
+
+      const authResponse = await client.send(
+        new InitiateAuthCommand({
+          ClientId: config.cognitoClientId,
+          AuthFlow: "USER_PASSWORD_AUTH",
           AuthParameters: {
-            USERNAME: email,
-            PASSWORD: code, // Use the code/temp password from email
+            USERNAME: username,
+            PASSWORD: password,
           },
         })
       );
 
-      // If auth succeeded, we have tokens
       if (authResponse.AuthenticationResult) {
         const tokens = {
           accessToken: authResponse.AuthenticationResult.AccessToken,
@@ -120,76 +137,46 @@ export function useAuth() {
           refreshToken: authResponse.AuthenticationResult.RefreshToken,
         };
         localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
-        localStorage.removeItem(SESSION_KEY);
+        localStorage.setItem(USERNAME_KEY, username);
 
         setState({
-          user: { email },
-          email,
+          user: { username },
+          email: username,
           isAuthenticated: true,
           isLoading: false,
           error: null,
-          session: null,
         });
 
-        return { email };
+        return { username };
       }
 
-      // If there's a challenge (e.g., NEW_PASSWORD_REQUIRED), handle it
-      if (authResponse.ChallengeName === "NEW_PASSWORD_REQUIRED" && authResponse.Session) {
-        // For passwordless, just accept the temp password
-        // Don't require new password setup
-        localStorage.setItem(
-          SESSION_KEY,
-          JSON.stringify({
-            session: authResponse.Session,
-            challengeName: authResponse.ChallengeName,
-          })
-        );
-
-        setState({
-          user: { email },
-          email,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-          session: authResponse.Session || null,
-        });
-
-        return { email };
-      }
-
-      throw new Error("Verification failed");
+      throw new Error("Sign in failed");
     } catch (error: any) {
-      const errorMsg = error.message || "Invalid code";
+      const errorMsg = error.message || "Sign in failed";
       setState((s) => ({ ...s, isLoading: false, error: errorMsg }));
       throw error;
     }
   }, []);
 
   const signOut = useCallback(async () => {
-    try {
-      localStorage.removeItem(TOKENS_KEY);
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(EMAIL_KEY);
-      localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKENS_KEY);
+    localStorage.removeItem(EMAIL_KEY);
+    localStorage.removeItem(USERNAME_KEY);
 
-      setState({
-        user: null,
-        email: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-        session: null,
-      });
-    } catch (error: any) {
-      console.error("Sign out error:", error);
-    }
+    setState({
+      user: null,
+      email: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    });
   }, []);
 
   return {
     ...state,
-    signInWithEmail,
-    verifyCode,
+    signUp,
+    confirmSignUp,
+    signIn,
     signOut,
   };
 }

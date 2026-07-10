@@ -5,22 +5,23 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const router = useRouter();
   const auth = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await auth.signIn(username, password);
-      router.push("/dashboard/");
+      await auth.signUp(username, password, email);
+      router.push("/verify-email/");
     } catch (error: any) {
-      alert(error.message || "Sign in failed");
+      alert(error.message || "Sign up failed");
     } finally {
       setIsLoading(false);
     }
@@ -40,8 +41,8 @@ export default function SignInPage() {
 
   return (
     <section className="section section-narrow">
-      <h1>Sign In</h1>
-      <form onSubmit={handleSignIn} className="auth-form">
+      <h1>Sign Up</h1>
+      <form onSubmit={handleSignUp} className="auth-form">
         <label>
           Username
           <input
@@ -55,12 +56,24 @@ export default function SignInPage() {
         </label>
 
         <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+            disabled={isLoading}
+          />
+        </label>
+
+        <label>
           Password
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Your password"
+            placeholder="At least 10 characters, mix of upper/lower, numbers"
             required
             disabled={isLoading}
           />
@@ -69,11 +82,11 @@ export default function SignInPage() {
         {auth.error && <p className="form-error">{auth.error}</p>}
 
         <button className="btn btn-primary" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign In"}
+          {isLoading ? "Creating account..." : "Sign Up"}
         </button>
       </form>
 
-      <p>Don't have an account? <Link href="/signup/">Sign up</Link></p>
+      <p>Already have an account? <Link href="/signin/">Sign in</Link></p>
     </section>
   );
 }

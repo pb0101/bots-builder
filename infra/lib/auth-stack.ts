@@ -18,7 +18,7 @@ export class AuthStack extends cdk.Stack {
       userPoolName: "bots-builder-parents",
       selfSignUpEnabled: true,
       signInAliases: { email: true },
-      autoVerify: { email: true },
+      autoVerify: { email: false },
       standardAttributes: {
         givenName: { required: true, mutable: true },
         familyName: { required: false, mutable: true },
@@ -43,7 +43,7 @@ export class AuthStack extends cdk.Stack {
     this.userPoolClient = this.userPool.addClient("WebClient", {
       userPoolClientName: "bots-builder-web",
       generateSecret: false, // public SPA client: PKCE, no secret
-      authFlows: { userSrp: true },
+      authFlows: { userSrp: true, userPassword: true },
       oAuth: {
         flows: { authorizationCodeGrant: true },
         scopes: [
