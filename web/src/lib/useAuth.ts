@@ -3,11 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   CognitoIdentityProviderClient,
-  AdminCreateUserCommand,
   AdminInitiateAuthCommand,
   RespondToAuthChallengeCommand,
-  AdminUserGlobalSignOutCommand,
-  AdminSetUserPasswordCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import { config } from "./config";
 
@@ -61,23 +58,16 @@ export function useAuth() {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
-      // Create or get user and let Cognito send temporary password via email
-      try {
-        await client.send(
-          new AdminCreateUserCommand({
-            UserPoolId: "us-east-1_7ivyevhwf",
-            Username: email,
-            UserAttributes: [
-              { Name: "email", Value: email },
-              { Name: "email_verified", Value: "true" }, // Mark email as verified
-            ],
-            MessageAction: "RESEND", // Send the temporary password via email
-            TemporaryPassword: Math.random().toString(36).slice(-10), // Random temp password
-          })
-        );
-      } catch (error: any) {
-        // User might already exist - that's fine, just continue
-        console.log(`User ${email} creation skipped (likely exists):`, error.message);
+      // Call Lambda to create user and send email with temporary password
+      const response = await fetch(`${config.apiUrl}/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to sign up");
       }
 
       // Email has been sent with temporary password
@@ -95,7 +85,7 @@ export function useAuth() {
 
       return { requiresCode: true };
     } catch (error: any) {
-      const errorMsg = error.message || "Could not sign in";
+      const errorMsg = error.message || "Could not sign up";
       setState((s) => ({ ...s, isLoading: false, error: errorMsg }));
       throw error;
     }

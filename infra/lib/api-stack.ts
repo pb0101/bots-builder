@@ -67,6 +67,7 @@ export class ApiStack extends cdk.Stack {
     const waitlistFn = fn("WaitlistFn", "waitlist.ts");
     const adminFn = fn("AdminFn", "admin.ts");
     const contactFn = fn("ContactFn", "contact.ts");
+    const authSignupFn = fn("AuthSignupFn", "auth-signup.ts");
 
     table.grantReadData(checkoutFn);     // cohort capacity check
     table.grantReadWriteData(webhookFn); // enrollment + seat count + cohort read for email
@@ -95,6 +96,17 @@ export class ApiStack extends cdk.Stack {
       conditions: { StringEquals: { "ses:FromAddress": process.env.FROM_EMAIL ?? "unset" } },
     });
     for (const f of [webhookFn, adminFn, contactFn]) f.addToRolePolicy(sesSend);
+
+    // Cognito admin APIs for auth signup
+    authSignupFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "cognito-idp:AdminCreateUser",
+          "cognito-idp:AdminInitiateAuth",
+        ],
+        resources: [props.userPool.userPoolArn],
+      })
+    );
 
     const authorizer = new HttpJwtAuthorizer(
       "CognitoJwt",
@@ -132,6 +144,7 @@ export class ApiStack extends cdk.Stack {
     add("/admin/roster", apigw.HttpMethod.GET, new HttpLambdaIntegration("AdminRosterInt", adminFn));
     add("/admin/notify-waitlist", apigw.HttpMethod.POST, new HttpLambdaIntegration("AdminNotifyInt", adminFn));
     add("/contact", apigw.HttpMethod.POST, new HttpLambdaIntegration("ContactInt", contactFn), false);
+    add("/auth/signup", apigw.HttpMethod.POST, new HttpLambdaIntegration("AuthSignupInt", authSignupFn), false);
     // Stripe calls this: signature-verified in the handler, no JWT.
     add("/webhook", apigw.HttpMethod.POST, new HttpLambdaIntegration("WebhookInt", webhookFn), false);
 
