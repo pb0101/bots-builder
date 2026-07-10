@@ -19,10 +19,10 @@ export default function SignUpPage() {
 
     try {
       await auth.signUp(username, password, email);
+      localStorage.setItem("bots-builder-username", username);
       router.push("/verify-email/");
     } catch (error: any) {
       alert(error.message || "Sign up failed");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -41,7 +41,7 @@ export default function SignUpPage() {
 
   return (
     <section className="section section-narrow">
-      <h1>Sign Up</h1>
+      <h1>Create Account</h1>
       <form onSubmit={handleSignUp} className="auth-form">
         <label>
           Username
@@ -82,7 +82,7 @@ export default function SignUpPage() {
         {auth.error && <p className="form-error">{auth.error}</p>}
 
         <button className="btn btn-primary" disabled={isLoading}>
-          {isLoading ? "Creating account..." : "Sign Up"}
+          {isLoading ? "Creating account..." : "Create Account"}
         </button>
       </form>
 
