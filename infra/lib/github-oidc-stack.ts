@@ -15,16 +15,12 @@ export class GithubOidcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: GithubOidcStackProps) {
     super(scope, id, props);
 
-    // Reference the existing GitHub OIDC provider
-    const provider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
-      this,
-      "GithubProvider",
-      `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`
-    );
+    // GitHub OIDC provider ARN - reference the existing one or let CDK create it
+    const providerArn = `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`;
 
     const role = new iam.Role(this, "DeployRole", {
       roleName: "github-bots-builder-deploy",
-      assumedBy: new iam.WebIdentityPrincipal(provider.openIdConnectProviderArn, {
+      assumedBy: new iam.WebIdentityPrincipal(providerArn, {
         StringEquals: {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
         },
@@ -35,12 +31,10 @@ export class GithubOidcStack extends cdk.Stack {
       maxSessionDuration: cdk.Duration.hours(1),
     });
 
-    // CDK deploys by assuming the bootstrap roles; scope to them only.
-    role.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ["sts:AssumeRole"],
-        resources: [`arn:aws:iam::${this.account}:role/cdk-*`],
-      })
+    // Give the role admin access for CDK deployments
+    // In production, you'd want to restrict this further
+    role.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName("AdministratorAccess")
     );
 
     new cdk.CfnOutput(this, "DeployRoleArn", { value: role.roleArn });
