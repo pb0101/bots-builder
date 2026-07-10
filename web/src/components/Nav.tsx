@@ -1,17 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useSafeAuth } from "@/lib/useSafeAuth";
-import { config } from "@/lib/config";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/useAuth";
 
 export function Nav() {
-  const auth = useSafeAuth();
+  const router = useRouter();
+  const auth = useAuth();
 
-  const signOut = () => {
-    const logoutUrl =
-      `${config.cognitoDomain}/logout?client_id=${config.cognitoClientId}` +
-      `&logout_uri=${encodeURIComponent(window.location.origin)}`;
-    auth.removeUser().then(() => (window.location.href = logoutUrl));
+  const handleSignOut = async () => {
+    await auth.signOut();
+    router.push("/");
   };
 
   return (
@@ -30,12 +29,14 @@ export function Nav() {
         {auth.isAuthenticated ? (
           <>
             <Link href="/dashboard/" className="nav-cta">My classes</Link>
-            <button className="nav-link-btn" onClick={signOut}>Sign out</button>
+            <button className="nav-link-btn" onClick={handleSignOut}>
+              Sign out
+            </button>
           </>
         ) : (
-          <button className="nav-cta" onClick={() => auth.signinRedirect()}>
+          <Link href="/signin/" className="nav-cta">
             Sign in
-          </button>
+          </Link>
         )}
       </nav>
     </header>
