@@ -1,14 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Amplify, Auth } from "aws-amplify";
+import { Amplify } from "aws-amplify";
+import { signUp, confirmSignUp, signIn, signOut, getCurrentUser } from "aws-amplify/auth";
 
 // Configure Amplify
 Amplify.configure({
   Auth: {
-    region: "us-east-1",
-    userPoolId: "us-east-1_7ivyevhwf",
-    userPoolWebClientId: "67rq6l3fg8175c2bgendlj5kus",
+    Cognito: {
+      region: "us-east-1",
+      userPoolId: "us-east-1_7ivyevhwf",
+      userPoolClientId: "67rq6l3fg8175c2bgendlj5kus",
+    },
   },
 });
 
@@ -35,10 +38,10 @@ export function useAuth() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const user = await Auth.currentAuthenticatedUser();
+        const user = await getCurrentUser();
         setState({
           user,
-          email: user.attributes?.email,
+          email: user?.username,
           isAuthenticated: true,
           isLoading: false,
           error: null,
@@ -50,14 +53,16 @@ export function useAuth() {
     checkAuth();
   }, []);
 
-  const signUp = useCallback(async (username: string, password: string, email: string) => {
+  const handleSignUp = useCallback(async (username: string, password: string, email: string) => {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
-      await Auth.signUp({
+      await signUp({
         username,
         password,
-        attributes: { email },
+        options: {
+          userAttributes: { email },
+        },
       });
 
       setState((s) => ({
@@ -75,11 +80,14 @@ export function useAuth() {
     }
   }, []);
 
-  const confirmSignUp = useCallback(async (username: string, code: string) => {
+  const handleConfirmSignUp = useCallback(async (username: string, code: string) => {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
-      await Auth.confirmSignUp(username, code);
+      await confirmSignUp({
+        username,
+        confirmationCode: code,
+      });
 
       setState({
         user: { username },
@@ -97,15 +105,18 @@ export function useAuth() {
     }
   }, []);
 
-  const signIn = useCallback(async (username: string, password: string) => {
+  const handleSignIn = useCallback(async (username: string, password: string) => {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
-      const user = await Auth.signIn(username, password);
+      const user = await signIn({
+        username,
+        password,
+      });
 
       setState({
         user,
-        email: user.attributes?.email,
+        email: username,
         isAuthenticated: true,
         isLoading: false,
         error: null,
@@ -119,9 +130,9 @@ export function useAuth() {
     }
   }, []);
 
-  const signOut = useCallback(async () => {
+  const handleSignOut = useCallback(async () => {
     try {
-      await Auth.signOut();
+      await signOut();
       localStorage.removeItem(TOKENS_KEY);
 
       setState({
@@ -138,9 +149,9 @@ export function useAuth() {
 
   return {
     ...state,
-    signUp,
-    confirmSignUp,
-    signIn,
-    signOut,
+    signUp: handleSignUp,
+    confirmSignUp: handleConfirmSignUp,
+    signIn: handleSignIn,
+    signOut: handleSignOut,
   };
 }
