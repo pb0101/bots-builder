@@ -15,13 +15,15 @@ export class GithubOidcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: GithubOidcStackProps) {
     super(scope, id, props);
 
-    const provider = new iam.OpenIdConnectProvider(this, "GithubProvider", {
-      url: "https://token.actions.githubusercontent.com",
-      clientIds: ["sts.amazonaws.com"],
-    });
+    // Reference the existing GitHub OIDC provider
+    const provider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+      this,
+      "GithubProvider",
+      `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`
+    );
 
     const role = new iam.Role(this, "DeployRole", {
-      roleName: "bots-builder-github-deploy",
+      roleName: "github-bots-builder-deploy",
       assumedBy: new iam.WebIdentityPrincipal(provider.openIdConnectProviderArn, {
         StringEquals: {
           "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
