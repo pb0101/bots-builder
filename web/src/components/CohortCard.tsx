@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSafeAuth } from "@/lib/useSafeAuth";
 import { createCheckout, joinWaitlist, type Cohort } from "@/lib/api";
 import { programs } from "@/lib/programs";
@@ -9,6 +10,7 @@ import { formatDateRange, seatsLabel } from "@/lib/format";
 type Mode = "idle" | "form" | "busy" | "waitlisted";
 
 export function CohortCard({ cohort }: { cohort: Cohort }) {
+  const router = useRouter();
   const auth = useSafeAuth();
   const program = programs.find((p) => p.id === cohort.programId);
   const isOpen = cohort.status === "open" && cohort.seatsLeft > 0;
@@ -23,7 +25,7 @@ export function CohortCard({ cohort }: { cohort: Cohort }) {
   const requireAuthThen = async (intent: object) => {
     if (!auth.isAuthenticated || !auth.user?.id_token) {
       sessionStorage.setItem("pendingCheckout", JSON.stringify(intent));
-      await auth.signinRedirect();
+      router.push("/signin/");
       return null;
     }
     return auth.user.id_token;

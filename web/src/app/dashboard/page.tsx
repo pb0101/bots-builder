@@ -70,9 +70,9 @@ export default function DashboardPage() {
       <section className="section section-narrow">
         <h1>Your classes live here</h1>
         <p>Sign in to see enrollments, cohort dates, and Demo Day details.</p>
-        <button className="btn btn-primary" onClick={() => auth.signinRedirect()}>
+        <Link href="/signin/" className="btn btn-primary">
           Sign in or create an account
-        </button>
+        </Link>
       </section>
     );
   }
