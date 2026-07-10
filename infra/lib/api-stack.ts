@@ -102,7 +102,7 @@ export class ApiStack extends cdk.Stack {
       new iam.PolicyStatement({
         actions: [
           "cognito-idp:AdminCreateUser",
-          "cognito-idp:AdminInitiateAuth",
+          "cognito-idp:AdminSetUserPassword",
         ],
         resources: [props.userPool.userPoolArn],
       })
