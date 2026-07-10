@@ -8,9 +8,9 @@ import { signUp, confirmSignUp, signIn, signOut, getCurrentUser } from "aws-ampl
 Amplify.configure({
   Auth: {
     Cognito: {
-      region: "us-east-1",
       userPoolId: "us-east-1_7ivyevhwf",
       userPoolClientId: "67rq6l3fg8175c2bgendlj5kus",
+      region: "us-east-1",
     },
   },
 });
