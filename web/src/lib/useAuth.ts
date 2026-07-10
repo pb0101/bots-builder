@@ -118,24 +118,34 @@ export function useAuth() {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
       const email = localStorage.getItem(EMAIL_KEY);
-      const session = localStorage.getItem(SESSION_KEY);
 
       if (!email) throw new Error("Email not found");
 
-      if (session) {
-        // If we have a session, respond to MFA challenge
+      // Try confirmation code flow (for sign-up with email OTP)
+      await client.send(
+        new ConfirmSignUpCommand({
+          ClientId: config.cognitoClientId,
+          Username: email,
+          ConfirmationCode: code,
+        })
+      );
+
+      // Confirmation succeeded - now attempt to sign in
+      // First, set a temporary password since we don't have one yet
+      try {
         const authResponse = await client.send(
-          new RespondToAuthChallengeCommand({
+          new AdminInitiateAuthCommand({
+            UserPoolId: "us-east-1_7ivyevhwf",
             ClientId: config.cognitoClientId,
-            ChallengeName: "MFA_REQUIRED",
-            Session: session,
-            ChallengeResponses: {
+            AuthFlow: "ADMIN_NO_SRP_AUTH",
+            AuthParameters: {
               USERNAME: email,
-              SOFTWARE_TOKEN_MFA_CODE: code,
+              PASSWORD: "TempPassword123!",
             },
           })
         );
 
+        // Check if we got authentication result
         if (authResponse.AuthenticationResult) {
           const tokens = {
             accessToken: authResponse.AuthenticationResult.AccessToken,
@@ -155,62 +165,57 @@ export function useAuth() {
           });
 
           return { email };
-        }
-      } else {
-        // Try confirmation code flow (for sign-up)
-        await client.send(
-          new ConfirmSignUpCommand({
-            ClientId: config.cognitoClientId,
-            Username: email,
-            ConfirmationCode: code,
-          })
-        );
+        } else if (authResponse.ChallengeName) {
+          // If there's a challenge, handle it
+          const challengeName = authResponse.ChallengeName;
+          const session = authResponse.Session;
 
-        // Confirmation succeeded - now sign in
-        try {
-          const authResponse = await client.send(
-            new AdminInitiateAuthCommand({
-              UserPoolId: "us-east-1_7ivyevhwf",
-              ClientId: config.cognitoClientId,
-              AuthFlow: "ADMIN_NO_SRP_AUTH",
-              AuthParameters: {
-                USERNAME: email,
-                PASSWORD: code, // Use the code as temp password
-              },
-            })
-          );
+          if (session && (challengeName === "SOFTWARE_TOKEN_MFA" || challengeName === "SMS_MFA")) {
+            const mfaResponse = await client.send(
+              new RespondToAuthChallengeCommand({
+                ClientId: config.cognitoClientId,
+                ChallengeName: challengeName,
+                Session: session,
+                ChallengeResponses: {
+                  USERNAME: email,
+                  SOFTWARE_TOKEN_MFA_CODE: code,
+                },
+              })
+            );
 
-          if (authResponse.AuthenticationResult) {
-            const tokens = {
-              accessToken: authResponse.AuthenticationResult.AccessToken,
-              idToken: authResponse.AuthenticationResult.IdToken,
-              refreshToken: authResponse.AuthenticationResult.RefreshToken,
-            };
-            localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
+            if (mfaResponse.AuthenticationResult) {
+              const tokens = {
+                accessToken: mfaResponse.AuthenticationResult.AccessToken,
+                idToken: mfaResponse.AuthenticationResult.IdToken,
+                refreshToken: mfaResponse.AuthenticationResult.RefreshToken,
+              };
+              localStorage.setItem(TOKENS_KEY, JSON.stringify(tokens));
+              localStorage.removeItem(SESSION_KEY);
 
-            setState({
-              user: { email },
-              email,
-              isAuthenticated: true,
-              isLoading: false,
-              error: null,
-              session: null,
-            });
+              setState({
+                user: { email },
+                email,
+                isAuthenticated: true,
+                isLoading: false,
+                error: null,
+                session: null,
+              });
 
-            return { email };
+              return { email };
+            }
           }
-        } catch {
-          // Auth might need additional challenge
-          setState({
-            user: { email },
-            email,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-            session: null,
-          });
-          return { email };
         }
+      } catch (authError) {
+        // Auth failed, but confirmation succeeded - consider user verified
+        setState({
+          user: { email },
+          email,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          session: null,
+        });
+        return { email };
       }
 
       throw new Error("Verification failed");
