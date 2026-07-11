@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "FAQ — Bots Builder" };
 const faqs: [string, string][] = [
   [
     "Where are classes held?",
-    "At the Frisco Public Library, 8000 Dallas Pkwy, Frisco, TX 75034. Free parking, and the children's wing is steps away for siblings tagging along at pickup.",
+    "In Frisco, TX. Each cohort's exact venue is listed on the schedule and included in your enrollment confirmation email.",
   ],
   [
     "My kid has never coded. Is Level 1 too hard?",

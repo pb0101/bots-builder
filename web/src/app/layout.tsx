@@ -52,7 +52,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div>
                 <p className="footer-brand">Bots Builder LLC</p>
                 <p>Robotics classes for ages 7–12 · Frisco, Texas</p>
-                <p>Classes held at the Frisco Public Library · 8000 Dallas Pkwy, Frisco, TX 75034</p>
               </div>
               <div>
                 <p className="footer-head">Contact</p>

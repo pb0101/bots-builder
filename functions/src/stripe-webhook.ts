@@ -115,8 +115,6 @@ export const handler = async (
             ``,
             `${studentName}'s seat is confirmed: ${when}.`,
             ``,
-            `Where: Frisco Public Library, 8000 Dallas Pkwy, Frisco, TX 75034.`,
-            ``,
             `What to expect: drop off 5 minutes early on day one. Everything is provided — robots, tablets, and materials stay with us. The last 10 minutes of every class is a showcase; you're welcome at pickup. The final session is Demo Day, built for families.`,
             ``,
             `Questions any time: just reply to this email.`,
