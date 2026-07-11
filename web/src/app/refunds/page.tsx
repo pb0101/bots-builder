@@ -26,7 +26,7 @@ export default function RefundsPage() {
         cancel a cohort, you receive a full refund. Refunds return to the original payment method
         via Stripe within 5–10 business days.
       </p>
-      <p>Requests: <a href="mailto:hello@botsbuilder.com">hello@botsbuilder.com</a></p>
+      <p>Requests: <a href="mailto:support@botsbuilderkids.com">support@botsbuilderkids.com</a></p>
     </section>
   );
 }

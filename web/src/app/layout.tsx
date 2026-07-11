@@ -21,7 +21,7 @@ const jsonLd = {
   "@type": "LocalBusiness",
   name: "Bots Builder",
   description: "Robotics and coding classes for kids ages 7–12 in Frisco, Texas.",
-  email: "hello@botsbuilder.com",
+  email: "support@botsbuilderkids.com",
   address: { "@type": "PostalAddress", addressLocality: "Frisco", addressRegion: "TX", addressCountry: "US" },
   priceRange: "$25–$599",
 };
@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
               <div>
                 <p className="footer-head">Contact</p>
-                <p><a href="mailto:hello@botsbuilder.com">hello@botsbuilder.com</a></p>
+                <p><a href="mailto:support@botsbuilderkids.com">support@botsbuilderkids.com</a></p>
                 <p><a href="/contact/">Contact form</a></p>
               </div>
               <div>

@@ -30,7 +30,7 @@ export default function SchedulePage() {
       {cohorts && cohorts.length === 0 && (
         <div className="empty-state">
           <p>New cohorts are being scheduled. Want first pick of seats?</p>
-          <a className="btn btn-primary" href="mailto:hello@botsbuilder.com?subject=Cohort%20interest">
+          <a className="btn btn-primary" href="mailto:support@botsbuilderkids.com?subject=Cohort%20interest">
             Email us your preferred days
           </a>
         </div>

@@ -27,7 +27,7 @@ export default function AboutPage() {
         in Dallas, thirty minutes from our classroom.
       </p>
       <p>
-        Questions? Email <a href="mailto:hello@botsbuilder.com">hello@botsbuilder.com</a> or grab
+        Questions? Email <a href="mailto:support@botsbuilderkids.com">support@botsbuilderkids.com</a> or grab
         a seat in a <Link href="/pricing/">trial workshop</Link>.
       </p>
     </section>

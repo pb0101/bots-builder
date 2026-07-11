@@ -52,7 +52,7 @@ export default function FaqPage() {
         ))}
       </div>
       <p className="section-note">
-        Something else? <a href="mailto:hello@botsbuilder.com">hello@botsbuilder.com</a> — or see
+        Something else? <a href="mailto:support@botsbuilderkids.com">support@botsbuilderkids.com</a> — or see
         the <Link href="/schedule/">current schedule</Link>.
       </p>
     </section>

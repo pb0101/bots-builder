@@ -32,7 +32,7 @@ export default function PrivacyPage() {
 
       <h2>Your choices</h2>
       <p>
-        Email <a href="mailto:hello@botsbuilder.com">hello@botsbuilder.com</a> to access, correct,
+        Email <a href="mailto:support@botsbuilderkids.com">support@botsbuilderkids.com</a> to access, correct,
         or delete your data. Deleting your account removes personal data from our systems within
         30 days, except records we must keep for tax and payment compliance.
       </p>

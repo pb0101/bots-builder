@@ -3,6 +3,7 @@ import * as cdk from "aws-cdk-lib";
 import { AuthStack } from "../lib/auth-stack";
 import { ApiStack } from "../lib/api-stack";
 import { WebStack } from "../lib/web-stack";
+import { EmailStack } from "../lib/email-stack";
 import { GithubOidcStack } from "../lib/github-oidc-stack";
 
 const app = new cdk.App();
@@ -28,6 +29,17 @@ new ApiStack(app, "BotsBuilderApi", {
 });
 
 new WebStack(app, "BotsBuilderWeb", { env });
+
+// Inbound email (support@<domain> -> owner inbox). Needs the custom domain.
+if (process.env.DOMAIN_NAME && process.env.HOSTED_ZONE_ID && process.env.HOSTED_ZONE_NAME && process.env.OWNER_EMAIL) {
+  new EmailStack(app, "BotsBuilderEmail", {
+    env,
+    domainName: process.env.DOMAIN_NAME,
+    hostedZoneId: process.env.HOSTED_ZONE_ID,
+    hostedZoneName: process.env.HOSTED_ZONE_NAME,
+    forwardTo: process.env.OWNER_EMAIL,
+  });
+}
 
 // Deploy this stack once, manually, to create the deploy role for GitHub Actions.
 new GithubOidcStack(app, "BotsBuilderGithubOidc", {

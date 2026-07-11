@@ -39,7 +39,7 @@ export default function ContactPage() {
       <h1>Talk to a human (who is also an engineer)</h1>
       <p className="lede">
         Cohort questions, private groups, birthday workshops, school partnerships — send it over.
-        Or email <a href="mailto:hello@botsbuilder.com">hello@botsbuilder.com</a> directly.
+        Or email <a href="mailto:support@botsbuilderkids.com">support@botsbuilderkids.com</a> directly.
       </p>
       <div className="admin-form contact-form">
         <label>Your name<input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} /></label>
