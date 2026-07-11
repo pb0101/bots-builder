@@ -6,7 +6,7 @@ import { Nav } from "@/components/Nav";
 export const metadata: Metadata = {
   title: "Bots Builder — Robotics classes for kids in Frisco, TX",
   description:
-    "Real engineering for ages 7–12. Kids build and program robots, earn skill badges, and progress toward the VEX World Championship held in Dallas. Taught by a professional engineer.",
+    "Real engineering for ages 7–14. Kids build and program robots, earn skill badges, and progress toward the VEX World Championship held in Dallas. Taught by a professional engineer.",
   openGraph: {
     title: "Bots Builder — Kids robotics classes in Frisco, TX",
     description:
@@ -20,7 +20,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
   name: "Bots Builder",
-  description: "Robotics and coding classes for kids ages 7–12 in Frisco, Texas.",
+  description: "Robotics and coding classes for kids ages 7–14 in Frisco, Texas.",
   email: "support@botsbuilderkids.com",
   // Business address is city-level only; classes are held at a venue we don't own.
   address: { "@type": "PostalAddress", addressLocality: "Frisco", addressRegion: "TX", addressCountry: "US" },
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="footer-grid">
               <div>
                 <p className="footer-brand">Bots Builder LLC</p>
-                <p>Robotics classes for ages 7–12 · Frisco, Texas</p>
+                <p>Robotics classes for ages 7–14 · Frisco, Texas</p>
               </div>
               <div>
                 <p className="footer-head">Contact</p>

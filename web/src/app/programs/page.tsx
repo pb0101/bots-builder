@@ -8,7 +8,7 @@ export default function ProgramsPage() {
   return (
     <section className="section">
       <p className="eyebrow">Programs</p>
-      <h1>A real engineering ladder, ages 7–12</h1>
+      <h1>A real engineering ladder, ages 7–14</h1>
       <p className="lede">
         Every course runs 8 weeks. Every session follows the same rhythm: a real-world hook, a
         mission briefing, 40 minutes of building and coding in pairs, scored test runs, and a
