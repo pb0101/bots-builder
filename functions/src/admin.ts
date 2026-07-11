@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, DeleteCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { sendEmail } from "./email";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
@@ -66,6 +66,25 @@ export const handler = async (
       })
     );
     return json(200, { cohortId });
+  }
+
+  if (route === "POST /admin/cohorts/delete") {
+    let body: any;
+    try {
+      body = JSON.parse(event.body ?? "{}");
+    } catch {
+      return json(400, { error: "Request body must be JSON." });
+    }
+    const cohortId = String(body.cohortId ?? "").trim();
+    if (!cohortId) return json(400, { error: "cohortId is required." });
+
+    await ddb.send(
+      new DeleteCommand({
+        TableName: table,
+        Key: { pk: "COHORT", sk: `COHORT#${cohortId}` },
+      })
+    );
+    return json(200, { deleted: cohortId });
   }
 
   if (route === "GET /admin/roster") {

@@ -49,8 +49,11 @@ const authHeaders = (idToken: string) => ({
   "content-type": "application/json",
 });
 
-export const fetchCohorts = () =>
-  request<{ cohorts: Cohort[] }>("/cohorts").then((d) => d.cohorts);
+// fresh=true bypasses the browser's 60s cache (admin needs to see saves immediately)
+export const fetchCohorts = (fresh = false) =>
+  request<{ cohorts: Cohort[] }>("/cohorts", fresh ? { cache: "no-store" } : undefined).then(
+    (d) => d.cohorts
+  );
 
 export const createCheckout = (idToken: string, body: CheckoutRequest) =>
   request<{ url: string }>("/checkout", {
@@ -101,6 +104,13 @@ export const adminSaveCohort = (idToken: string, cohort: NewCohort) =>
     method: "POST",
     headers: authHeaders(idToken),
     body: JSON.stringify(cohort),
+  });
+
+export const adminDeleteCohort = (idToken: string, cohortId: string) =>
+  request<{ deleted: string }>("/admin/cohorts/delete", {
+    method: "POST",
+    headers: authHeaders(idToken),
+    body: JSON.stringify({ cohortId }),
   });
 
 export const adminNotifyWaitlist = (idToken: string, cohortId: string) =>

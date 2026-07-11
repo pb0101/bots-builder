@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSafeAuth } from "@/lib/useSafeAuth";
 import {
+  adminDeleteCohort,
   adminFetchRoster,
   adminNotifyWaitlist,
   adminSaveCohort,
@@ -33,12 +34,14 @@ export default function AdminPage() {
 
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [form, setForm] = useState<NewCohort>(emptyForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [roster, setRoster] = useState<RosterEntry[] | null>(null);
   const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
   const [rosterFor, setRosterFor] = useState("");
 
-  const reload = () => fetchCohorts().then(setCohorts).catch(() => {});
+  // fresh=true: skip the browser's 60s cache so new saves show up immediately
+  const reload = () => fetchCohorts(true).then(setCohorts).catch(() => {});
   useEffect(() => { if (isAdmin) reload(); }, [isAdmin]);
 
   if (auth.isLoading) return <section className="section"><p>Signing you in…</p></section>;
@@ -64,11 +67,54 @@ export default function AdminPage() {
     if (!auth.user?.id_token) return;
     try {
       const res = await adminSaveCohort(auth.user.id_token, form);
-      setStatus(`Saved cohort ${res.cohortId}.`);
+      setStatus(`${editingId ? "Updated" : "Created"} cohort ${res.cohortId}.`);
       setForm(emptyForm);
+      setEditingId(null);
       reload();
     } catch (e) {
       setStatus(e instanceof Error ? e.message : "Save failed.");
+    }
+  };
+
+  const startEdit = (c: Cohort) => {
+    setStatus("");
+    setEditingId(c.cohortId);
+    setForm({
+      cohortId: c.cohortId,
+      programId: c.programId,
+      startDate: c.startDate,
+      endDate: c.endDate,
+      dayOfWeek: c.dayOfWeek,
+      time: c.time,
+      location: c.location,
+      capacity: c.capacity,
+      status: c.status === "full" ? "open" : c.status,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setStatus("");
+  };
+
+  const remove = async (c: Cohort) => {
+    if (!auth.user?.id_token) return;
+    const enrolled = c.capacity - c.seatsLeft;
+    const warning =
+      enrolled > 0
+        ? `${c.cohortId} has ${enrolled} enrollment${enrolled === 1 ? "" : "s"}. Delete anyway?`
+        : `Delete cohort ${c.cohortId}? This can't be undone.`;
+    if (!window.confirm(warning)) return;
+    try {
+      await adminDeleteCohort(auth.user.id_token, c.cohortId);
+      setStatus(`Deleted cohort ${c.cohortId}.`);
+      if (editingId === c.cohortId) cancelEdit();
+      if (rosterFor === c.cohortId) { setRosterFor(""); setRoster(null); }
+      reload();
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : "Delete failed.");
     }
   };
 
@@ -91,7 +137,7 @@ export default function AdminPage() {
 
       <div className="admin-grid">
         <div className="admin-panel">
-          <h2>Create a cohort</h2>
+          <h2>{editingId ? `Edit cohort · ${editingId}` : "Create a cohort"}</h2>
           <div className="admin-form">
             <label>Program
               <select value={form.programId} onChange={set("programId")}>
@@ -110,8 +156,13 @@ export default function AdminPage() {
                 <option value="closed">closed</option>
               </select>
             </label>
-            <button className="btn btn-primary" onClick={save}>Save cohort</button>
-            {status && <p className="cohort-msg">{status}</p>}
+            <button className="btn btn-primary" onClick={save}>
+              {editingId ? "Update cohort" : "Save cohort"}
+            </button>
+            {editingId && (
+              <button className="nav-link-btn" onClick={cancelEdit}>Cancel edit</button>
+            )}
+            {status && <p className="cohort-msg" role="status">{status}</p>}
           </div>
         </div>
 
@@ -130,6 +181,7 @@ export default function AdminPage() {
                 </div>
                 <div className="admin-row-actions">
                   <button className="btn btn-ghost" onClick={() => loadRoster(c.cohortId)}>Roster</button>
+                  <button className="nav-link-btn" onClick={() => startEdit(c)}>Edit</button>
                   <button
                     className="nav-link-btn"
                     onClick={async () => {
@@ -149,6 +201,13 @@ export default function AdminPage() {
                     }}
                   >
                     {c.status === "open" ? "Close" : "Reopen"}
+                  </button>
+                  <button
+                    className="nav-link-btn"
+                    style={{ color: "#b42334" }}
+                    onClick={() => remove(c)}
+                  >
+                    Delete
                   </button>
                 </div>
               </li>
