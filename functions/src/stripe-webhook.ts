@@ -88,8 +88,8 @@ export const handler = async (
             TableName: table,
             Key: { pk: "COHORT", sk: `COHORT#${cohortId}` },
             UpdateExpression: "SET #st = :full",
-            ConditionExpression: "enrolledCount >= capacity",
-            ExpressionAttributeNames: { "#st": "status" },
+            ConditionExpression: "enrolledCount >= #cap",
+            ExpressionAttributeNames: { "#st": "status", "#cap": "capacity" },
             ExpressionAttributeValues: { ":full": "full" },
           })
         );

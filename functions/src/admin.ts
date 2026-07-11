@@ -41,10 +41,15 @@ export const handler = async (
         Key: { pk: "COHORT", sk: `COHORT#${cohortId}` },
         UpdateExpression:
           "SET cohortId = :id, programId = :prog, startDate = :sd, endDate = :ed, " +
-          "dayOfWeek = :dow, #tm = :tm, #loc = :loc, capacity = :cap, #st = :status, " +
+          "dayOfWeek = :dow, #tm = :tm, #loc = :loc, #cap = :cap, #st = :status, " +
           "enrolledCount = if_not_exists(enrolledCount, :zero), " +
           "seatsTaken = if_not_exists(seatsTaken, :zero), updatedAt = :now",
-        ExpressionAttributeNames: { "#tm": "time", "#loc": "location", "#st": "status" },
+        ExpressionAttributeNames: {
+          "#tm": "time",
+          "#loc": "location",
+          "#st": "status",
+          "#cap": "capacity", // "capacity" is a DynamoDB reserved keyword
+        },
         ExpressionAttributeValues: {
           ":id": cohortId,
           ":prog": c.programId,
