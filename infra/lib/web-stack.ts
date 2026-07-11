@@ -48,11 +48,34 @@ export class WebStack extends cdk.Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         compress: true,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        functionAssociations: [
+          {
+            function: new cloudfront.Function(this, "RewriteFunction", {
+              code: cloudfront.FunctionCode.fromInline(`
+                function handler(event) {
+                  var request = event.request;
+                  var uri = request.uri;
+
+                  // If URI ends with / but doesn't have a file extension, append index.html
+                  if (uri.endsWith('/')) {
+                    request.uri += 'index.html';
+                  } else if (!uri.includes('.')) {
+                    // If URI doesn't have an extension and doesn't end with /, append /index.html
+                    request.uri += '/index.html';
+                  }
+
+                  return request;
+                }
+              `),
+            }),
+            eventType: cloudfront.FunctionEventType.VIEWER_REQUEST,
+          },
+        ],
       },
       defaultRootObject: "index.html",
       errorResponses: [
-        { httpStatus: 403, responsePagePath: "/404.html", responseHttpStatus: 404 },
-        { httpStatus: 404, responsePagePath: "/404.html", responseHttpStatus: 404 },
+        { httpStatus: 403, responsePagePath: "/index.html", responseHttpStatus: 200 },
+        { httpStatus: 404, responsePagePath: "/index.html", responseHttpStatus: 200 },
       ],
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
     });
