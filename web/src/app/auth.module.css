@@ -93,6 +93,46 @@
   margin: 0;
 }
 
+.rules {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0.15rem 0 0;
+  padding: 0;
+}
+
+.rules li {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  transition: color 0.15s ease;
+}
+
+.rules li::before {
+  content: "○ ";
+  font-family: var(--font-mono);
+}
+
+.ruleOk {
+  color: var(--mint) !important;
+}
+
+.ruleOk::before {
+  content: "✓ " !important;
+}
+
+.matchOk {
+  font-size: 0.8rem;
+  color: var(--mint);
+  margin: 0.15rem 0 0;
+}
+
+.matchBad {
+  font-size: 0.8rem;
+  color: #b42334;
+  margin: 0.15rem 0 0;
+}
+
 .codeInput {
   font-family: var(--font-mono);
   font-size: 1.4rem;

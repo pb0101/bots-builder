@@ -18,7 +18,12 @@ export class AuthStack extends cdk.Stack {
       userPoolName: "bots-builder-parents",
       selfSignUpEnabled: true,
       signInAliases: { email: true },
-      autoVerify: { email: false },
+      autoVerify: { email: true }, // required for signup confirmation codes + resend
+      userVerification: {
+        emailSubject: "Your Bots Builder verification code",
+        emailBody: "Welcome to Bots Builder! Your verification code is {####}",
+        emailStyle: cognito.VerificationEmailStyle.CODE,
+      },
       standardAttributes: {
         givenName: { required: true, mutable: true },
         familyName: { required: false, mutable: true },

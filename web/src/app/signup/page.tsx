@@ -16,15 +16,19 @@ export default function SignUpPage() {
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const rules = [
+    { label: "At least 8 characters", ok: password.length >= 8 },
+    { label: "One uppercase letter", ok: /[A-Z]/.test(password) },
+    { label: "One lowercase letter", ok: /[a-z]/.test(password) },
+    { label: "One number", ok: /\d/.test(password) },
+  ];
+  const passwordOk = rules.every((r) => r.ok);
+  const confirmOk = confirm.length > 0 && password === confirm;
+  const canSubmit = passwordOk && confirmOk && firstName.trim() !== "" && email.trim() !== "";
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
-
-    if (password !== confirm) {
-      setFormError("Passwords don't match.");
-      return;
-    }
-
     setBusy(true);
     try {
       await auth.signUp(email.trim(), password, firstName.trim());
@@ -100,13 +104,16 @@ export default function SignUpPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              minLength={8}
               required
               disabled={busy}
             />
-            <p className={styles.hint}>
-              At least 8 characters with an uppercase letter, a lowercase letter, and a number.
-            </p>
+            <ul className={styles.rules} aria-live="polite">
+              {rules.map((r) => (
+                <li key={r.label} className={r.ok ? styles.ruleOk : undefined}>
+                  {r.label}
+                </li>
+              ))}
+            </ul>
           </div>
 
           <div className={styles.field}>
@@ -118,17 +125,21 @@ export default function SignUpPage() {
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="••••••••"
-              minLength={8}
               required
               disabled={busy}
             />
+            {confirm.length > 0 && (
+              <p className={confirmOk ? styles.matchOk : styles.matchBad} aria-live="polite">
+                {confirmOk ? "✓ Passwords match" : "Passwords don't match yet"}
+              </p>
+            )}
           </div>
 
           {(formError || auth.error) && (
             <p className={styles.error} role="alert">{formError || auth.error}</p>
           )}
 
-          <button type="submit" className={styles.submit} disabled={busy}>
+          <button type="submit" className={styles.submit} disabled={busy || !canSubmit}>
             {busy ? "Creating account…" : "Create account"}
           </button>
         </form>
