@@ -1,9 +1,20 @@
 import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from "aws-lambda";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, DeleteCommand, QueryCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  DeleteCommand,
+  QueryCommand,
+  ScanCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
+import {
+  CognitoIdentityProviderClient,
+  ListUsersCommand,
+} from "@aws-sdk/client-cognito-identity-provider";
 import { sendEmail } from "./email";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const cognito = new CognitoIdentityProviderClient({});
 
 /**
  * Admin-only (Cognito group "admin"):
@@ -85,6 +96,65 @@ export const handler = async (
       })
     );
     return json(200, { deleted: cohortId });
+  }
+
+  // All enrollments across every cohort (small table; scan is fine).
+  if (route === "GET /admin/enrollments") {
+    const items: Record<string, any>[] = [];
+    let startKey: Record<string, any> | undefined;
+    do {
+      const res: any = await ddb.send(
+        new ScanCommand({
+          TableName: table,
+          FilterExpression: "begins_with(sk, :e)",
+          ExpressionAttributeValues: { ":e": "ENROLLMENT#" },
+          ExclusiveStartKey: startKey,
+        })
+      );
+      items.push(...(res.Items ?? []));
+      startKey = res.LastEvaluatedKey;
+    } while (startKey);
+
+    const enrollments = items
+      .map((i) => ({
+        cohortId: i.cohortId ?? "",
+        programId: i.programId ?? "",
+        studentName: i.studentName ?? "",
+        studentAge: i.studentAge ?? "",
+        parentEmail: i.parentEmail ?? "",
+        paymentStatus: i.paymentStatus ?? "",
+        amountTotal: i.amountTotal ?? 0,
+        createdAt: i.createdAt ?? "",
+      }))
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    return json(200, { enrollments });
+  }
+
+  // All registered parent accounts from Cognito.
+  if (route === "GET /admin/users") {
+    const users: any[] = [];
+    let token: string | undefined;
+    do {
+      const res = await cognito.send(
+        new ListUsersCommand({
+          UserPoolId: process.env.USER_POOL_ID!,
+          Limit: 60,
+          PaginationToken: token,
+        })
+      );
+      for (const u of res.Users ?? []) {
+        const attr = (n: string) => u.Attributes?.find((a) => a.Name === n)?.Value ?? "";
+        users.push({
+          email: attr("email"),
+          name: attr("given_name"),
+          status: u.UserStatus ?? "",
+          createdAt: u.UserCreateDate ? new Date(u.UserCreateDate).toISOString() : "",
+        });
+      }
+      token = res.PaginationToken;
+    } while (token);
+    users.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    return json(200, { users });
   }
 
   if (route === "GET /admin/roster") {

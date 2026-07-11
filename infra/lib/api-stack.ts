@@ -50,6 +50,7 @@ export class ApiStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(15),
         environment: {
           TABLE_NAME: table.tableName,
+          USER_POOL_ID: props.userPool.userPoolId,
           SITE_URL: props.siteUrl,
           STRIPE_SECRET_PARAM: "/bots-builder/stripe/secret-key",
           STRIPE_WEBHOOK_PARAM: "/bots-builder/stripe/webhook-secret",
@@ -97,6 +98,14 @@ export class ApiStack extends cdk.Stack {
     });
     for (const f of [webhookFn, adminFn, contactFn]) f.addToRolePolicy(sesSend);
 
+    // Admin: list registered parents from Cognito
+    adminFn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["cognito-idp:ListUsers"],
+        resources: [props.userPool.userPoolArn],
+      })
+    );
+
     // Cognito admin APIs for auth signup
     authSignupFn.addToRolePolicy(
       new iam.PolicyStatement({
@@ -143,6 +152,8 @@ export class ApiStack extends cdk.Stack {
     add("/admin/cohorts", apigw.HttpMethod.POST, new HttpLambdaIntegration("AdminCohortInt", adminFn));
     add("/admin/cohorts/delete", apigw.HttpMethod.POST, new HttpLambdaIntegration("AdminCohortDelInt", adminFn));
     add("/admin/roster", apigw.HttpMethod.GET, new HttpLambdaIntegration("AdminRosterInt", adminFn));
+    add("/admin/enrollments", apigw.HttpMethod.GET, new HttpLambdaIntegration("AdminEnrollInt", adminFn));
+    add("/admin/users", apigw.HttpMethod.GET, new HttpLambdaIntegration("AdminUsersInt", adminFn));
     add("/admin/notify-waitlist", apigw.HttpMethod.POST, new HttpLambdaIntegration("AdminNotifyInt", adminFn));
     add("/contact", apigw.HttpMethod.POST, new HttpLambdaIntegration("ContactInt", contactFn), false);
     add("/auth/signup", apigw.HttpMethod.POST, new HttpLambdaIntegration("AuthSignupInt", authSignupFn), false);

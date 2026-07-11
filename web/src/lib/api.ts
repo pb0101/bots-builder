@@ -127,6 +127,36 @@ export const sendContact = (name: string, email: string, message: string, websit
     body: JSON.stringify({ name, email, message, website }),
   }).then((d) => d.message);
 
+export interface AdminEnrollment {
+  cohortId: string;
+  programId: string;
+  studentName: string;
+  studentAge: string;
+  parentEmail: string;
+  paymentStatus: string;
+  amountTotal: number;
+  createdAt: string;
+}
+
+export interface AdminUser {
+  email: string;
+  name: string;
+  status: string;
+  createdAt: string;
+}
+
+export const adminFetchAllEnrollments = (idToken: string) =>
+  request<{ enrollments: AdminEnrollment[] }>("/admin/enrollments", {
+    headers: { authorization: `Bearer ${idToken}` },
+    cache: "no-store",
+  }).then((d) => d.enrollments);
+
+export const adminFetchUsers = (idToken: string) =>
+  request<{ users: AdminUser[] }>("/admin/users", {
+    headers: { authorization: `Bearer ${idToken}` },
+    cache: "no-store",
+  }).then((d) => d.users);
+
 export const adminFetchRoster = (idToken: string, cohortId: string) =>
   request<{ roster: RosterEntry[]; waitlist: WaitlistEntry[] }>(
     `/admin/roster?cohortId=${encodeURIComponent(cohortId)}`,
