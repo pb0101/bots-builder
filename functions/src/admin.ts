@@ -3,6 +3,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   DeleteCommand,
+  GetCommand,
   QueryCommand,
   ScanCommand,
   UpdateCommand,
@@ -155,6 +156,37 @@ export const handler = async (
     } while (token);
     users.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
     return json(200, { users });
+  }
+
+  // Curriculum documents (instructor manuals etc.) — admin eyes only.
+  if (route === "GET /admin/curriculum") {
+    const res = await ddb.send(
+      new QueryCommand({
+        TableName: table,
+        KeyConditionExpression: "pk = :pk",
+        ExpressionAttributeValues: { ":pk": "CURRICULUM" },
+        ProjectionExpression: "id, title, updatedAt",
+      })
+    );
+    const curricula = (res.Items ?? [])
+      .map((i) => ({ id: i.id ?? "", title: i.title ?? "", updatedAt: i.updatedAt ?? "" }))
+      .sort((a, b) => String(a.title).localeCompare(String(b.title)));
+    return json(200, { curricula });
+  }
+
+  if (route === "GET /admin/curriculum/item") {
+    const id = event.queryStringParameters?.id ?? "";
+    if (!id) return json(400, { error: "id query parameter is required." });
+    const res = await ddb.send(
+      new GetCommand({ TableName: table, Key: { pk: "CURRICULUM", sk: `CURRICULUM#${id}` } })
+    );
+    if (!res.Item) return json(404, { error: "Curriculum not found." });
+    return json(200, {
+      id: res.Item.id,
+      title: res.Item.title,
+      content: res.Item.content,
+      updatedAt: res.Item.updatedAt ?? "",
+    });
   }
 
   if (route === "GET /admin/roster") {

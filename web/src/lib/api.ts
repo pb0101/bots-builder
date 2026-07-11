@@ -157,6 +157,27 @@ export const adminFetchUsers = (idToken: string) =>
     cache: "no-store",
   }).then((d) => d.users);
 
+export interface CurriculumMeta {
+  id: string;
+  title: string;
+  updatedAt: string;
+}
+
+export interface CurriculumDoc extends CurriculumMeta {
+  content: string;
+}
+
+export const adminFetchCurricula = (idToken: string) =>
+  request<{ curricula: CurriculumMeta[] }>("/admin/curriculum", {
+    headers: { authorization: `Bearer ${idToken}` },
+    cache: "no-store",
+  }).then((d) => d.curricula);
+
+export const adminFetchCurriculum = (idToken: string, id: string) =>
+  request<CurriculumDoc>(`/admin/curriculum/item?id=${encodeURIComponent(id)}`, {
+    headers: { authorization: `Bearer ${idToken}` },
+  });
+
 export const adminFetchRoster = (idToken: string, cohortId: string) =>
   request<{ roster: RosterEntry[]; waitlist: WaitlistEntry[] }>(
     `/admin/roster?cohortId=${encodeURIComponent(cohortId)}`,
