@@ -9,6 +9,7 @@ import styles from "../auth.module.css";
 export default function SignUpPage() {
   const router = useRouter();
   const auth = useAuth();
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -26,7 +27,7 @@ export default function SignUpPage() {
 
     setBusy(true);
     try {
-      await auth.signUp(email.trim(), password);
+      await auth.signUp(email.trim(), password, firstName.trim());
       router.push("/verify-email/");
     } catch (error: any) {
       setFormError(error.message || "Sign up failed. Please try again.");
@@ -62,6 +63,21 @@ export default function SignUpPage() {
 
         <form onSubmit={handleSignUp} className={styles.form}>
           <div className={styles.field}>
+            <label htmlFor="firstName">Your first name</label>
+            <input
+              id="firstName"
+              type="text"
+              autoComplete="given-name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="e.g., Priya"
+              maxLength={80}
+              required
+              disabled={busy}
+            />
+          </div>
+
+          <div className={styles.field}>
             <label htmlFor="email">Email</label>
             <input
               id="email"
@@ -83,13 +99,13 @@ export default function SignUpPage() {
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••"
-              minLength={10}
+              placeholder="••••••••"
+              minLength={8}
               required
               disabled={busy}
             />
             <p className={styles.hint}>
-              At least 10 characters with an uppercase letter, a lowercase letter, and a number.
+              At least 8 characters with an uppercase letter, a lowercase letter, and a number.
             </p>
           </div>
 
@@ -101,8 +117,8 @@ export default function SignUpPage() {
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
-              placeholder="••••••••••"
-              minLength={10}
+              placeholder="••••••••"
+              minLength={8}
               required
               disabled={busy}
             />

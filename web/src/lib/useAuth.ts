@@ -69,7 +69,7 @@ export function useAuth() {
     loadSession().catch(() => setState((s) => ({ ...s, isLoading: false })));
   }, [loadSession]);
 
-  const handleSignUp = useCallback(async (email: string, password: string) => {
+  const handleSignUp = useCallback(async (email: string, password: string, givenName: string) => {
     try {
       setState((s) => ({ ...s, isLoading: true, error: null }));
 
@@ -77,7 +77,7 @@ export function useAuth() {
         username: email,
         password,
         options: {
-          userAttributes: { email },
+          userAttributes: { email, given_name: givenName },
         },
       });
 
