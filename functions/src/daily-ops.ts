@@ -70,7 +70,7 @@ export const handler = async (): Promise<void> => {
         await sendEmail(
           [e.email],
           subject,
-          `Hi,\n\n${e.studentName}'s class starts ${isTomorrow ? "tomorrow" : c.startDate}: ${when}.\n\n${note}\n\nThe last 10 minutes of every class is a showcase — you're welcome at pickup.\n\n— Bots Builder, Frisco TX`
+          `Hi,\n\n${e.studentName}'s class starts ${isTomorrow ? "tomorrow" : c.startDate}: ${when}.\n\nWhere: Frisco Public Library, 8000 Dallas Pkwy, Frisco, TX 75034.\n\n${note}\n\nThe last 10 minutes of every class is a showcase — you're welcome at pickup.\n\n— Bots Builder · Frisco Public Library, Frisco TX`
         );
       }
     }

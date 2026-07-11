@@ -41,6 +41,9 @@ export default function ContactPage() {
         Cohort questions, private groups, birthday workshops, school partnerships — send it over.
         Or email <a href="mailto:support@botsbuilderkids.com">support@botsbuilderkids.com</a> directly.
       </p>
+      <p className="mono">
+        Classes are held at the Frisco Public Library · 8000 Dallas Pkwy, Frisco, TX 75034
+      </p>
       <div className="admin-form contact-form">
         <label>Your name<input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} /></label>
         <label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} /></label>

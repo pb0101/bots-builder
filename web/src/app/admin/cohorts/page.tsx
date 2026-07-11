@@ -23,7 +23,7 @@ const emptyForm: NewCohort = {
   endDate: "",
   dayOfWeek: "Saturday",
   time: "10:00 AM",
-  location: "Frisco, TX",
+  location: "Frisco Public Library",
   capacity: 8,
 };
 
