@@ -34,9 +34,12 @@ export function Nav() {
             </button>
           </>
         ) : (
-          <Link href="/signin/" className="nav-cta">
-            Sign in
-          </Link>
+          <>
+            <Link href="/signin/">Sign in</Link>
+            <Link href="/signup/" className="nav-cta">
+              Sign up
+            </Link>
+          </>
         )}
       </nav>
     </header>
