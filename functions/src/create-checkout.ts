@@ -50,8 +50,8 @@ export const handler = async (
         TableName: table,
         Key: key,
         UpdateExpression: "ADD seatsTaken :one",
-        ConditionExpression: "#st = :open AND (attribute_not_exists(seatsTaken) OR seatsTaken < capacity)",
-        ExpressionAttributeNames: { "#st": "status" },
+        ConditionExpression: "#st = :open AND (attribute_not_exists(seatsTaken) OR seatsTaken < #cap)",
+        ExpressionAttributeNames: { "#st": "status", "#cap": "capacity" }, // "capacity" is a DynamoDB reserved word
         ExpressionAttributeValues: { ":one": 1, ":open": "open" },
       })
     );
