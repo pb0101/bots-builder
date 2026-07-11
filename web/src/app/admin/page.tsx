@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSafeAuth } from "@/lib/useSafeAuth";
 import {
@@ -118,14 +118,27 @@ export default function AdminPage() {
     }
   };
 
+  const rosterRef = useRef<HTMLDivElement>(null);
+
   const loadRoster = async (cohortId: string) => {
     if (!auth.user?.id_token) return;
+    setStatus("");
     setRosterFor(cohortId);
     setRoster(null);
-    const res = await adminFetchRoster(auth.user.id_token, cohortId);
-    setRoster(res.roster);
-    setWaitlist(res.waitlist);
+    try {
+      const res = await adminFetchRoster(auth.user.id_token, cohortId);
+      setRoster(res.roster);
+      setWaitlist(res.waitlist);
+    } catch (e) {
+      setRosterFor("");
+      setStatus(e instanceof Error ? e.message : "Couldn't load the roster.");
+    }
   };
+
+  // Bring the roster panel into view once it renders
+  useEffect(() => {
+    if (rosterFor) rosterRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [rosterFor]);
 
   const set = (k: keyof NewCohort) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [k]: k === "capacity" ? Number(e.target.value) : e.target.value });
@@ -217,10 +230,12 @@ export default function AdminPage() {
       </div>
 
       {rosterFor && (
-        <div className="admin-panel">
+        <div className="admin-panel" ref={rosterRef}>
           <h2 className="mono">Roster · {rosterFor}</h2>
           {roster === null && <p>Loading…</p>}
-          {roster && roster.length === 0 && <p>No enrollments yet.</p>}
+          {roster && roster.length === 0 && (
+            <p>No enrollments yet — families appear here as soon as they complete payment.</p>
+          )}
           {roster && roster.length > 0 && (
             <table className="roster-table">
               <thead><tr><th>Student</th><th>Age</th><th>Parent email</th><th>Payment</th></tr></thead>
