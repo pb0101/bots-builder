@@ -9,7 +9,7 @@ export default function Home() {
     <>
       <section className="hero grid-paper">
         <div className="hero-copy">
-          <p className="eyebrow">Frisco Public Library · Ages 7–12 · Small classes, 2 kids per robot</p>
+          <p className="eyebrow">Classes at Frisco Public Library · Ages 7–12 · 2 kids per robot</p>
           <h1>
             Your kid builds the robot.
             <br />

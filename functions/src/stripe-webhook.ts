@@ -121,7 +121,7 @@ export const handler = async (
             ``,
             `Questions any time: just reply to this email.`,
             ``,
-            `— Bots Builder · Frisco Public Library, Frisco TX`,
+            `— Bots Builder, Frisco TX`,
           ].join("\n")
         );
       }

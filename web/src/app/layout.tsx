@@ -22,14 +22,9 @@ const jsonLd = {
   name: "Bots Builder",
   description: "Robotics and coding classes for kids ages 7–12 in Frisco, Texas.",
   email: "support@botsbuilderkids.com",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "Frisco Public Library, 8000 Dallas Pkwy",
-    addressLocality: "Frisco",
-    addressRegion: "TX",
-    postalCode: "75034",
-    addressCountry: "US",
-  },
+  // Business address is city-level only; classes are held at a venue we don't own.
+  address: { "@type": "PostalAddress", addressLocality: "Frisco", addressRegion: "TX", addressCountry: "US" },
+  areaServed: "Frisco, TX",
   priceRange: "$25–$599",
 };
 
@@ -56,8 +51,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="footer-grid">
               <div>
                 <p className="footer-brand">Bots Builder LLC</p>
-                <p>Robotics classes for ages 7–12</p>
-                <p>Frisco Public Library · 8000 Dallas Pkwy, Frisco, TX 75034</p>
+                <p>Robotics classes for ages 7–12 · Frisco, Texas</p>
+                <p>Classes held at the Frisco Public Library · 8000 Dallas Pkwy, Frisco, TX 75034</p>
               </div>
               <div>
                 <p className="footer-head">Contact</p>
