@@ -430,3 +430,16 @@ a { color: var(--cobalt-deep); }
 .inv-status-btn:hover { background: var(--paper); }
 .inv-status-on { background: var(--cobalt); color: #fff; }
 .inv-status-on:hover { background: var(--cobalt-deep); }
+
+/* inventory: readable phase headers + inline actual-cost editing */
+.inv-phase-head { margin-bottom: 0.5rem; }
+.inv-phase-head h2 { margin: 0 0 0.15rem; font-size: 1.15rem; line-height: 1.25; }
+.inv-phase-head .enroll-meta { margin: 0; }
+.inv-actual-wrap { display: inline-flex; align-items: center; gap: 0.15rem; }
+.inv-actual-prefix { color: var(--ink-soft); font-size: 0.85rem; }
+.inv-actual-input {
+  width: 5.5rem; padding: 0.3rem 0.4rem; border: 1px solid var(--line);
+  border-radius: 6px; font-size: 0.9rem; font-family: var(--font-mono); background: #fff;
+}
+.inv-actual-input:focus { outline: none; border-color: var(--cobalt); box-shadow: 0 0 0 2px rgba(46,91,255,0.12); }
+.inv-table td, .inv-table th { padding: 0.55rem 0.7rem; }

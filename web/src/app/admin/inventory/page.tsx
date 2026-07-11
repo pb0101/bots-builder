@@ -47,6 +47,8 @@ export default function AdminInventoryPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  // Local draft of the inline "actual cost" field, keyed by item id
+  const [actualDraft, setActualDraft] = useState<Record<string, string>>({});
 
   const reload = () => {
     if (!auth.user?.id_token) return;
@@ -59,13 +61,11 @@ export default function AdminInventoryPage() {
   const totals = useMemo(() => {
     const list = items ?? [];
     const estimated = list.reduce((s, i) => s + (i.estCost || 0), 0);
-    // Money committed = actual where known, else estimate, for ordered/received items
-    const committed = list
-      .filter((i) => i.status !== "needed")
-      .reduce((s, i) => s + (i.actualCost ?? i.estCost ?? 0), 0);
+    // Actual money spent = sum of recorded actual costs (real expense tracking)
+    const spent = list.reduce((s, i) => s + (i.actualCost ?? 0), 0);
     const received = list.filter((i) => i.status === "received").length;
     const outstanding = list.filter((i) => i.status === "needed").length;
-    return { estimated, committed, received, outstanding, count: list.length };
+    return { estimated, spent, received, outstanding, count: list.length };
   }, [items]);
 
   const save = async () => {
@@ -99,10 +99,30 @@ export default function AdminInventoryPage() {
   const quickStatus = async (it: InventoryItem, next: InventoryStatus) => {
     if (!auth.user?.id_token) return;
     try {
-      await adminSaveInventoryItem(auth.user.id_token, { ...it, status: next });
+      // Marking received/ordered with no recorded actual yet? default it to the estimate.
+      const patch: Partial<InventoryItem> = { ...it, status: next };
+      if (next !== "needed" && it.actualCost == null) patch.actualCost = it.estCost;
+      await adminSaveInventoryItem(auth.user.id_token, patch);
       reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Update failed.");
+    }
+  };
+
+  // Save the inline actual-cost edit for one row
+  const commitActual = async (it: InventoryItem) => {
+    if (!auth.user?.id_token) return;
+    const raw = actualDraft[it.id];
+    if (raw === undefined) return; // untouched
+    const value = raw.trim() === "" ? null : Number(raw);
+    if (value != null && Number.isNaN(value)) return;
+    setActualDraft((d) => { const n = { ...d }; delete n[it.id]; return n; });
+    if (value === it.actualCost) return; // unchanged
+    try {
+      await adminSaveInventoryItem(auth.user.id_token, { ...it, actualCost: value });
+      reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't save actual cost.");
     }
   };
 
@@ -139,8 +159,8 @@ export default function AdminInventoryPage() {
           <div className="stat-label">Estimated total</div>
         </div>
         <div className="stat-card">
-          <div className="stat-value">{money(totals.committed)}</div>
-          <div className="stat-label">Ordered + received</div>
+          <div className="stat-value">{money(totals.spent)}</div>
+          <div className="stat-label">Actual spent</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{totals.received}/{totals.count}</div>
@@ -187,17 +207,22 @@ export default function AdminInventoryPage() {
         const rows = items.filter((i) => i.phase === phase.id);
         if (rows.length === 0) return null;
         const est = rows.reduce((s, i) => s + (i.estCost || 0), 0);
+        const spent = rows.reduce((s, i) => s + (i.actualCost ?? 0), 0);
         const gotAll = rows.every((i) => i.status === "received");
         return (
           <div className="admin-panel" key={phase.id}>
-            <h2>
-              {phase.label} <span className="mono enroll-meta">· {rows.length} items · {money(est)}{gotAll ? " · ✓ all received" : ""}</span>
-            </h2>
+            <div className="inv-phase-head">
+              <h2>{phase.label}{gotAll ? " ✓" : ""}</h2>
+              <p className="mono enroll-meta">
+                {rows.length} items · est {money(est)}
+                {spent > 0 ? ` · spent ${money(spent)}` : ""}
+              </p>
+            </div>
             <div style={{ overflowX: "auto" }}>
               <table className="roster-table inv-table">
                 <thead>
                   <tr>
-                    <th>Item</th><th>Qty</th><th>Vendor / SKU</th><th>Est.</th><th>Actual</th><th>Status</th><th></th>
+                    <th>Item</th><th>Qty</th><th>Vendor / SKU</th><th>Est.</th><th>Actual paid</th><th>Status</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -211,7 +236,22 @@ export default function AdminInventoryPage() {
                       <td>{it.quantity}</td>
                       <td className="mono enroll-meta">{it.vendor}{it.sku ? ` · ${it.sku}` : ""}</td>
                       <td>{money(it.estCost)}</td>
-                      <td>{it.actualCost != null ? money(it.actualCost) : "—"}</td>
+                      <td>
+                        <span className="inv-actual-wrap">
+                          <span className="inv-actual-prefix">$</span>
+                          <input
+                            className="inv-actual-input"
+                            type="number"
+                            min={0}
+                            inputMode="decimal"
+                            placeholder={String(it.estCost)}
+                            value={actualDraft[it.id] ?? (it.actualCost != null ? String(it.actualCost) : "")}
+                            onChange={(e) => setActualDraft((d) => ({ ...d, [it.id]: e.target.value }))}
+                            onBlur={() => commitActual(it)}
+                            onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                          />
+                        </span>
+                      </td>
                       <td>
                         <div className="inv-status-group">
                           {STATUSES.map((s) => (
