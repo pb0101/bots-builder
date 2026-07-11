@@ -10,7 +10,6 @@ Amplify.configure({
     Cognito: {
       userPoolId: "us-east-1_7ivyevhwf",
       userPoolClientId: "67rq6l3fg8175c2bgendlj5kus",
-      region: "us-east-1",
     },
   },
 });
