@@ -126,7 +126,11 @@ export class ApiStack extends cdk.Stack {
     const api = new apigw.HttpApi(this, "Api", {
       apiName: "bots-builder-api",
       corsPreflight: {
-        allowOrigins: [props.siteUrl, "http://localhost:3000"],
+        allowOrigins: [
+          props.siteUrl,
+          "https://d2x688lmup7zbh.cloudfront.net", // legacy CloudFront URL during domain transition
+          "http://localhost:3000",
+        ],
         allowMethods: [apigw.CorsHttpMethod.GET, apigw.CorsHttpMethod.POST],
         allowHeaders: ["authorization", "content-type"],
       },
