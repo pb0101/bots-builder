@@ -43,7 +43,9 @@ export function useAuth() {
 
   const loadSession = useCallback(async () => {
     const current = await getCurrentUser();
-    const session = await fetchAuthSession();
+    // forceRefresh so claim changes (e.g. being added to the admin group)
+    // take effect on next page load instead of after token expiry
+    const session = await fetchAuthSession({ forceRefresh: true });
     const idToken = session.tokens?.idToken;
     const email =
       (idToken?.payload?.email as string) ??
