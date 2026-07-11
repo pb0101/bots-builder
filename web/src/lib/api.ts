@@ -183,3 +183,44 @@ export const adminFetchRoster = (idToken: string, cohortId: string) =>
     `/admin/roster?cohortId=${encodeURIComponent(cohortId)}`,
     { headers: { authorization: `Bearer ${idToken}` } }
   );
+
+// ----- hardware inventory -----
+export type InventoryStatus = "needed" | "ordered" | "received";
+export type InventoryPhase = "A" | "B" | "C" | "D";
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  phase: InventoryPhase;
+  category: string;
+  vendor: string;
+  sku: string;
+  quantity: number;
+  estCost: number;
+  actualCost: number | null;
+  status: InventoryStatus;
+  notes: string;
+  updatedAt: string;
+}
+
+export type NewInventoryItem = Omit<InventoryItem, "updatedAt">;
+
+export const adminFetchInventory = (idToken: string) =>
+  request<{ items: InventoryItem[] }>("/admin/inventory", {
+    headers: { authorization: `Bearer ${idToken}` },
+    cache: "no-store",
+  }).then((d) => d.items);
+
+export const adminSaveInventoryItem = (idToken: string, item: Partial<NewInventoryItem>) =>
+  request<{ id: string }>("/admin/inventory", {
+    method: "POST",
+    headers: authHeaders(idToken),
+    body: JSON.stringify(item),
+  });
+
+export const adminDeleteInventoryItem = (idToken: string, id: string) =>
+  request<{ deleted: string }>("/admin/inventory/delete", {
+    method: "POST",
+    headers: authHeaders(idToken),
+    body: JSON.stringify({ id }),
+  });

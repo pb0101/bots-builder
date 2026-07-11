@@ -412,3 +412,21 @@ a { color: var(--cobalt-deep); }
   font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase;
   letter-spacing: 0.04em; background: var(--paper);
 }
+
+/* ----- admin inventory ----- */
+.inv-form { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); align-items: end; }
+.inv-form .inv-notes { grid-column: 1 / -1; }
+.inv-form-actions { grid-column: 1 / -1; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.inv-table td { vertical-align: top; }
+.inv-row.inv-received { background: #f4fbf7; }
+.inv-row.inv-ordered { background: #fffdf3; }
+.inv-status-group { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.inv-status-btn {
+  border: none; background: #fff; cursor: pointer; padding: 0.3rem 0.55rem;
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-soft);
+  border-right: 1px solid var(--line);
+}
+.inv-status-btn:last-child { border-right: none; }
+.inv-status-btn:hover { background: var(--paper); }
+.inv-status-on { background: var(--cobalt); color: #fff; }
+.inv-status-on:hover { background: var(--cobalt-deep); }

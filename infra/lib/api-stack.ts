@@ -160,6 +160,9 @@ export class ApiStack extends cdk.Stack {
     add("/admin/users", apigw.HttpMethod.GET, new HttpLambdaIntegration("AdminUsersInt", adminFn));
     add("/admin/curriculum", apigw.HttpMethod.GET, new HttpLambdaIntegration("AdminCurrListInt", adminFn));
     add("/admin/curriculum/item", apigw.HttpMethod.GET, new HttpLambdaIntegration("AdminCurrItemInt", adminFn));
+    add("/admin/inventory", apigw.HttpMethod.GET, new HttpLambdaIntegration("AdminInvListInt", adminFn));
+    add("/admin/inventory", apigw.HttpMethod.POST, new HttpLambdaIntegration("AdminInvSaveInt", adminFn));
+    add("/admin/inventory/delete", apigw.HttpMethod.POST, new HttpLambdaIntegration("AdminInvDelInt", adminFn));
     add("/admin/notify-waitlist", apigw.HttpMethod.POST, new HttpLambdaIntegration("AdminNotifyInt", adminFn));
     add("/contact", apigw.HttpMethod.POST, new HttpLambdaIntegration("ContactInt", contactFn), false);
     add("/auth/signup", apigw.HttpMethod.POST, new HttpLambdaIntegration("AuthSignupInt", authSignupFn), false);

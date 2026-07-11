@@ -9,6 +9,7 @@ const TABS = [
   { href: "/admin/cohorts/", label: "Cohorts & rosters" },
   { href: "/admin/students/", label: "Students" },
   { href: "/admin/parents/", label: "Parents" },
+  { href: "/admin/inventory/", label: "Inventory" },
   { href: "/admin/curriculum/", label: "Curriculum" },
   { href: "/schedule/", label: "Public schedule ↗" },
 ];

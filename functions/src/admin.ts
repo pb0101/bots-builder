@@ -189,6 +189,88 @@ export const handler = async (
     });
   }
 
+  // ----- hardware inventory -----
+  if (route === "GET /admin/inventory") {
+    const res = await ddb.send(
+      new QueryCommand({
+        TableName: table,
+        KeyConditionExpression: "pk = :pk",
+        ExpressionAttributeValues: { ":pk": "INVENTORY" },
+      })
+    );
+    const items = (res.Items ?? []).map((i) => ({
+      id: i.id ?? "",
+      name: i.name ?? "",
+      phase: i.phase ?? "A",
+      category: i.category ?? "",
+      vendor: i.vendor ?? "",
+      sku: i.sku ?? "",
+      quantity: i.quantity ?? 1,
+      estCost: i.estCost ?? 0,
+      actualCost: i.actualCost ?? null,
+      status: i.status ?? "needed",
+      notes: i.notes ?? "",
+      updatedAt: i.updatedAt ?? "",
+    }));
+    return json(200, { items });
+  }
+
+  if (route === "POST /admin/inventory") {
+    let b: any;
+    try {
+      b = JSON.parse(event.body ?? "{}");
+    } catch {
+      return json(400, { error: "Request body must be JSON." });
+    }
+    if (!String(b.name ?? "").trim()) return json(400, { error: "name is required." });
+    const id: string = String(b.id ?? "").trim() || `item-${Date.now()}-${Math.floor(Math.random() * 1e4)}`;
+    const status = ["needed", "ordered", "received"].includes(b.status) ? b.status : "needed";
+
+    await ddb.send(
+      new UpdateCommand({
+        TableName: table,
+        Key: { pk: "INVENTORY", sk: `ITEM#${id}` },
+        UpdateExpression:
+          "SET id = :id, #nm = :name, phase = :phase, category = :cat, vendor = :vendor, " +
+          "sku = :sku, quantity = :qty, estCost = :est, actualCost = :actual, #st = :status, " +
+          "notes = :notes, updatedAt = :now",
+        ExpressionAttributeNames: { "#nm": "name", "#st": "status" },
+        ExpressionAttributeValues: {
+          ":id": id,
+          ":name": String(b.name).trim().slice(0, 200),
+          ":phase": ["A", "B", "C", "D"].includes(b.phase) ? b.phase : "A",
+          ":cat": String(b.category ?? "").trim().slice(0, 80),
+          ":vendor": String(b.vendor ?? "").trim().slice(0, 80),
+          ":sku": String(b.sku ?? "").trim().slice(0, 60),
+          ":qty": Number(b.quantity) || 1,
+          ":est": Number(b.estCost) || 0,
+          ":actual": b.actualCost === null || b.actualCost === undefined || b.actualCost === ""
+            ? null
+            : Number(b.actualCost),
+          ":status": status,
+          ":notes": String(b.notes ?? "").slice(0, 500),
+          ":now": new Date().toISOString(),
+        },
+      })
+    );
+    return json(200, { id });
+  }
+
+  if (route === "POST /admin/inventory/delete") {
+    let b: any;
+    try {
+      b = JSON.parse(event.body ?? "{}");
+    } catch {
+      return json(400, { error: "Request body must be JSON." });
+    }
+    const id = String(b.id ?? "").trim();
+    if (!id) return json(400, { error: "id is required." });
+    await ddb.send(
+      new DeleteCommand({ TableName: table, Key: { pk: "INVENTORY", sk: `ITEM#${id}` } })
+    );
+    return json(200, { deleted: id });
+  }
+
   if (route === "GET /admin/roster") {
     const cohortId = event.queryStringParameters?.cohortId ?? "";
     if (!cohortId) return json(400, { error: "cohortId query parameter is required." });
