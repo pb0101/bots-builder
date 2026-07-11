@@ -70,7 +70,7 @@ export class ApiStack extends cdk.Stack {
     const contactFn = fn("ContactFn", "contact.ts");
     const authSignupFn = fn("AuthSignupFn", "auth-signup.ts");
 
-    table.grantReadData(checkoutFn);     // cohort capacity check
+    table.grantReadWriteData(checkoutFn); // cohort read + atomic seat-hold writes
     table.grantReadWriteData(webhookFn); // enrollment + seat count + cohort read for email
     table.grantWriteData(contactFn);
     table.grantReadData(enrollmentsFn);
