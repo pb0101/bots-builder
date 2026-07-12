@@ -25,6 +25,15 @@ export default function SchedulePage() {
         robot, roles swap every class, and the final session is a parent Demo Day.
       </p>
 
+      <div className="scarcity-banner" role="note">
+        <span className="scarcity-badge mono">8 seats only</span>
+        <p>
+          <strong>Each cohort caps at 8 children — first come, first served.</strong> We keep
+          classes small so every kid gets real hands-on time. When a cohort fills, the next
+          opening is the following term.
+        </p>
+      </div>
+
       {error && <p className="form-error" role="alert">{error}</p>}
       {cohorts === null && !error && <p>Loading upcoming cohorts…</p>}
       {cohorts && cohorts.length === 0 && (

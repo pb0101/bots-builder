@@ -2,11 +2,47 @@ import type { Metadata } from "next";
 import { programs } from "@/lib/programs";
 import { EnrollButton } from "@/components/EnrollButton";
 
-export const metadata: Metadata = { title: "Programs — Bots Builder" };
+export const metadata: Metadata = {
+  title: "Programs — Kids Robotics Classes Ages 7–14",
+  description:
+    "A four-level robotics engineering ladder for kids in Frisco, TX: from story-driven first robots to autonomous missions, mechanisms, Python coding, and a VEX competition team.",
+  alternates: { canonical: "/programs/" },
+};
+
+// Course structured data helps these programs surface in Google course listings.
+const courseLd = {
+  "@context": "https://schema.org",
+  "@graph": programs.map((p) => ({
+    "@type": "Course",
+    name: `${p.name} — Bots Builder`,
+    description: p.tagline,
+    provider: {
+      "@type": "Organization",
+      name: "Bots Builder",
+      sameAs: "https://botsbuilderkids.com",
+    },
+    offers: {
+      "@type": "Offer",
+      price: p.price,
+      priceCurrency: "USD",
+      category: "Paid",
+      availability: "https://schema.org/InStock",
+    },
+    hasCourseInstance: {
+      "@type": "CourseInstance",
+      courseMode: "Onsite",
+      location: { "@type": "Place", address: { "@type": "PostalAddress", addressLocality: "Frisco", addressRegion: "TX", addressCountry: "US" } },
+    },
+  })),
+};
 
 export default function ProgramsPage() {
   return (
     <section className="section">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseLd) }}
+      />
       <p className="eyebrow">Programs</p>
       <h1>A real engineering ladder, ages 7–14</h1>
       <p className="lede">

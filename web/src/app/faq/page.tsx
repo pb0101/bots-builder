@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "FAQ — Bots Builder" };
+export const metadata: Metadata = {
+  title: "FAQ — Kids Robotics Classes in Frisco",
+  description:
+    "Answers for parents: where classes are held, prerequisites, class size, safety, refunds, and how the four-level robotics ladder works.",
+  alternates: { canonical: "/faq/" },
+};
 
 const faqs: [string, string][] = [
   [
@@ -42,9 +47,23 @@ const faqs: [string, string][] = [
   ],
 ];
 
+const faqLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map(([q, a]) => ({
+    "@type": "Question",
+    name: q,
+    acceptedAnswer: { "@type": "Answer", text: a },
+  })),
+};
+
 export default function FaqPage() {
   return (
     <section className="section section-narrow">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
       <p className="eyebrow">FAQ</p>
       <h1>Questions parents actually ask</h1>
       <div className="faq-list">

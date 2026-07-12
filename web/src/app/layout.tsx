@@ -4,16 +4,39 @@ import { Providers } from "@/components/Providers";
 import { Nav } from "@/components/Nav";
 
 export const metadata: Metadata = {
-  title: "Bots Builder — Robotics classes for kids in Frisco, TX",
+  metadataBase: new URL("https://botsbuilderkids.com"),
+  title: {
+    default: "Bots Builder — Kids Robotics Classes in Frisco, TX",
+    template: "%s · Bots Builder",
+  },
   description:
-    "Real engineering for ages 7–14. Kids build and program robots, earn skill badges, and progress toward the VEX World Championship held in Dallas. Taught by a professional engineer.",
+    "Robotics and coding classes for kids ages 7–14 in Frisco, TX. Kids build and program real VEX robots, earn skill badges, and progress toward the VEX World Championship in Dallas. Small 8-kid classes taught by a professional engineer.",
+  keywords: [
+    "kids robotics classes Frisco",
+    "robotics classes for kids Frisco TX",
+    "kids coding classes Frisco",
+    "VEX robotics Frisco",
+    "STEM classes for kids Frisco",
+    "robotics camp Frisco Texas",
+    "after school robotics Collin County",
+  ],
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "Bots Builder — Kids robotics classes in Frisco, TX",
+    title: "Bots Builder — Kids Robotics Classes in Frisco, TX",
     description:
-      "Kids build and program autonomous robots on a four-level engineering ladder. Small classes, skill badges, parent Demo Days.",
+      "Kids build and program autonomous robots on a four-level engineering ladder. Small 8-kid classes, skill badges, parent Demo Days.",
+    url: "https://botsbuilderkids.com",
+    siteName: "Bots Builder",
     type: "website",
     locale: "en_US",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bots Builder — Kids Robotics Classes in Frisco, TX",
+    description:
+      "Real engineering for ages 7–14. Small classes, VEX robots, a ladder to the World Championship in Dallas.",
+  },
+  robots: { index: true, follow: true },
 };
 
 const jsonLd = {

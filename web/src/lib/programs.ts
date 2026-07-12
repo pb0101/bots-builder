@@ -5,6 +5,7 @@ export interface Program {
   ages: string;
   weeks: string;
   price: number;         // display only; Stripe is the source of truth
+  sessions: number;      // class sessions per course; 0 = seasonal (no per-class price)
   tagline: string;
   outcomes: string[];
   color: string;         // accent CSS variable
@@ -18,6 +19,7 @@ export const programs: Program[] = [
     ages: "Ages 7–12",
     weeks: "One session · 90 min",
     price: 25,
+    sessions: 1,
     tagline: "Build, code, and drive-test a robot in one Saturday morning. Credit toward any course.",
     outcomes: [
       "Your kid builds and programs a real robot in 90 minutes",
@@ -33,6 +35,7 @@ export const programs: Program[] = [
     ages: "Ages 7–8",
     weeks: "8 weeks · 60 min",
     price: 299,
+    sessions: 8,
     tagline: "Story-driven first robots: motors, sensors, and an electromagnet crane.",
     outcomes: [
       "Builds and runs eight working machines",
@@ -48,6 +51,7 @@ export const programs: Program[] = [
     ages: "Ages 9–12",
     weeks: "8 weeks · 75 min",
     price: 379,
+    sessions: 8,
     tagline: "Motion and sensors. Ends with a fully autonomous rescue mission.",
     outcomes: [
       "Programs a robot to navigate by touch, distance, and color",
@@ -63,6 +67,7 @@ export const programs: Program[] = [
     ages: "Ages 9–12",
     weeks: "8 weeks · 75 min",
     price: 379,
+    sessions: 8,
     tagline: "Gears, arms, claws, and launchers. Robots that move the world.",
     outcomes: [
       "Designs geared mechanisms and motorized attachments",
@@ -78,6 +83,7 @@ export const programs: Program[] = [
     ages: "Ages 10–13",
     weeks: "8 weeks · 75 min",
     price: 399,
+    sessions: 8,
     tagline: "Same robot, real Python. Variables, functions, and a P-controller.",
     outcomes: [
       "Writes robot programs in Python, not just blocks",
@@ -93,6 +99,7 @@ export const programs: Program[] = [
     ages: "Ages 9–14",
     weeks: "Seasonal · 90 min",
     price: 599,
+    sessions: 0,
     tagline: "A real VEX IQ competition team. Worlds is held in Dallas.",
     outcomes: [
       "Competes in official tournaments as a registered team",

@@ -203,8 +203,9 @@ a { color: var(--cobalt-deep); }
 .price-badge { color: var(--cobalt-deep); font-weight: 600; }
 .price-card h2 { font-size: 1.25rem; margin: 0; }
 .price-meta { color: var(--ink-soft); }
-.price-amount { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; margin: 0.4rem 0; }
+.price-amount { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; margin: 0.4rem 0 0.1rem; }
 .price-amount span { font-size: 0.95rem; font-family: var(--font-body); font-weight: 400; color: var(--ink-soft); }
+.price-total { color: var(--ink-soft); font-size: 0.82rem; margin: 0 0 0.4rem; }
 .price-tagline { flex: 1; color: var(--ink-soft); }
 .fine-print { margin-top: 3rem; background: #fff; border: 2px dashed var(--line); border-radius: var(--radius); padding: 1.5rem; }
 .fine-print ul { margin: 0; padding-left: 1.2rem; }
@@ -443,3 +444,16 @@ a { color: var(--cobalt-deep); }
 }
 .inv-actual-input:focus { outline: none; border-color: var(--cobalt); box-shadow: 0 0 0 2px rgba(46,91,255,0.12); }
 .inv-table td, .inv-table th { padding: 0.55rem 0.7rem; }
+
+/* schedule scarcity banner */
+.scarcity-banner {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  background: #fff7e6; border: 1.5px solid var(--sun); border-radius: var(--radius);
+  padding: 1rem 1.25rem; margin: 1.5rem 0 2rem;
+}
+.scarcity-banner p { margin: 0; flex: 1; min-width: 260px; color: var(--ink); }
+.scarcity-badge {
+  background: var(--sun); color: var(--ink); font-weight: 700;
+  padding: 0.35rem 0.7rem; border-radius: 999px; white-space: nowrap;
+  font-size: 0.8rem; letter-spacing: 0.02em;
+}
