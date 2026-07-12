@@ -14,6 +14,7 @@ export function CohortCard({ cohort }: { cohort: Cohort }) {
   const auth = useSafeAuth();
   const program = programs.find((p) => p.id === cohort.programId);
   const isOpen = cohort.status === "open" && cohort.seatsLeft > 0;
+  const perClass = program && program.sessions > 1 ? Math.round(program.price / program.sessions) : null;
 
   const [mode, setMode] = useState<Mode>("idle");
   const [studentName, setStudentName] = useState("");
@@ -76,6 +77,13 @@ export function CohortCard({ cohort }: { cohort: Cohort }) {
         </p>
         <h3>{program?.name ?? cohort.programId}</h3>
         <p className="cohort-loc">{cohort.location}</p>
+        {program && (
+          <p className="mono cohort-price">
+            {perClass
+              ? <>${perClass}/class · <span>${program.price} for {program.sessions} classes</span></>
+              : <>${program.price}{program.id === "competitor" ? " / season" : " / workshop"}</>}
+          </p>
+        )}
         <p className={`mono seats ${isOpen ? (cohort.seatsLeft <= 3 ? "seats-low" : "") : "seats-full"}`}>
           {seatsLabel(cohort.seatsLeft, cohort.status)}
         </p>
@@ -84,7 +92,7 @@ export function CohortCard({ cohort }: { cohort: Cohort }) {
       <div className="cohort-action">
         {mode === "idle" && isOpen && (
           <button className="btn btn-primary" onClick={() => setMode("form")}>
-            Enroll · ${program?.price ?? ""}
+            Enroll · {perClass ? `$${perClass}/class` : `$${program?.price ?? ""}`}
           </button>
         )}
         {mode === "idle" && !isOpen && (

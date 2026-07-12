@@ -256,6 +256,8 @@ a { color: var(--cobalt-deep); }
 .cohort-main h3 { margin: 0.1rem 0 0.2rem; }
 .cohort-dates { color: var(--cobalt-deep); font-weight: 600; }
 .cohort-loc { color: var(--ink-soft); margin-bottom: 0.4rem; }
+.cohort-price { color: var(--ink); font-weight: 600; margin-bottom: 0.4rem; }
+.cohort-price span { color: var(--ink-soft); font-weight: 400; }
 .seats { font-weight: 600; color: var(--mint); }
 .seats-low { color: #b45309; }
 .seats-full { color: #c0262d; }
